@@ -1,0 +1,2343 @@
+warning: type `SymbolLayer_Impl` should have an upper camel case name
+  --> maplibre/src/legacy/layout/symbol_layout.rs:53:10
+   |
+53 | pub type SymbolLayer_Impl = SymbolLayer;
+   |          ^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `SymbolLayerImpl`
+   |
+   = note: `#[warn(non_camel_case_types)]` on by default
+
+warning: type `SymbolLayoutProperties_Unevaluated` should have an upper camel case name
+   --> maplibre/src/legacy/style_types.rs:960:12
+    |
+960 | pub struct SymbolLayoutProperties_Unevaluated;
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `SymbolLayoutPropertiesUnevaluated`
+
+warning: type `SymbolLayoutProperties_PossiblyEvaluated` should have an upper camel case name
+   --> maplibre/src/legacy/style_types.rs:963:12
+    |
+963 | pub struct SymbolLayoutProperties_PossiblyEvaluated;
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `SymbolLayoutPropertiesPossiblyEvaluated`
+
+warning: type `SymbolLayoutProperties_Evaluated` should have an upper camel case name
+   --> maplibre/src/legacy/style_types.rs:978:12
+    |
+978 | pub struct SymbolLayoutProperties_Evaluated;
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `SymbolLayoutPropertiesEvaluated`
+
+warning: variant `f64` should have an upper camel case name
+   --> maplibre/src/legacy/style_types.rs:996:9
+    |
+996 |         f64(f64),
+    |         ^^^ help: convert the identifier to upper camel case (notice the capitalization): `F64`
+
+warning: variable does not need to be mutable
+  --> maplibre/src/background/queue_system.rs:27:14
+   |
+27 |     let Some(mut layer_item_phase) = world.resources.get_mut::<RenderPhase<LayerItem>>() else {
+   |              ----^^^^^^^^^^^^^^^^
+   |              |
+   |              help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+warning: unused variable: `item`
+  --> maplibre/src/background/render_commands.rs:37:9
+   |
+37 |         item: &P,
+   |         ^^^^ help: if this is intentional, prefix it with an underscore: `_item`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: variable does not need to be mutable
+   --> maplibre/src/geojson/mod.rs:256:21
+    |
+256 |                 let mut tessellator = TextTessellator::<IndexDataType>::default();
+    |                     ----^^^^^^^^^^^
+    |                     |
+    |                     help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> maplibre/src/geojson/mod.rs:261:21
+    |
+261 |                 let mut tessellator_new = TextTessellatorNew::new(text_field);
+    |                     ----^^^^^^^^^^^^^^^
+    |                     |
+    |                     help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> maplibre/src/vector/process_vector.rs:85:29
+   |
+85 |                         let mut tessellator = TextTessellator::<IndexDataType>::default();
+   |                             ----^^^^^^^^^^^
+   |                             |
+   |                             help: remove this `mut`
+
+warning: unused variable: `window`
+   --> maplibre/src/sdf/collision_system.rs:118:29
+    |
+118 |                         let window = view_state.clip_to_window(&shader);
+    |                             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_window`
+
+warning: unused variable: `is_offscreen`
+   --> maplibre/src/sdf/collision_system.rs:151:43
+    |
+151 |                         let (placed_text, is_offscreen) = collision_index.place_feature(
+    |                                           ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_is_offscreen`
+
+warning: unused variable: `device`
+  --> maplibre/src/sdf/collision_system.rs:51:34
+   |
+51 |             renderer: Renderer { device, queue, .. },
+   |                                  ^^^^^^ help: try ignoring the field: `device: _`
+
+warning: unused variable: `f`
+   --> maplibre/src/sdf/collision_system.rs:182:35
+    |
+182 | ...                   Some(|f: &IndexedSubfeature| true), // collisionGroupPredicate
+    |                             ^ help: if this is intentional, prefix it with an underscore: `_f`
+
+warning: variable does not need to be mutable
+  --> maplibre/src/sdf/tessellation_new.rs:80:13
+   |
+80 |         let mut parameters = BucketParameters {
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: type `PatternDependency` is more private than the item `SymbolBucket::add_feature`
+   --> maplibre/src/legacy/buckets/symbol_bucket.rs:525:5
+    |
+525 | /     pub fn add_feature(
+526 | |         &self,
+527 | |         geometry_tile_fature: &SymbolGeometryTileFeature,
+528 | |         geometry_collection: &GeometryCollection,
+...   |
+532 | |         canonical: &CanonicalTileID,
+533 | |     ) {
+    | |_____^ method `SymbolBucket::add_feature` is reachable at visibility `pub(crate)`
+    |
+note: but type `PatternDependency` is only usable at visibility `pub(self)`
+   --> maplibre/src/legacy/buckets/symbol_bucket.rs:31:1
+    |
+31  | struct PatternDependency;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `IntersectStatus` is more private than the item `CollisionIndex::intersects_tile_edges`
+   --> maplibre/src/legacy/collision_index.rs:121:5
+    |
+121 | /     pub fn intersects_tile_edges(
+122 | |         &self,
+123 | |         box_: &CollisionBox,
+124 | |         shift: Point2D<f64, ScreenSpace>,
+...   |
+127 | |         tile_edges: CollisionBoundaries,
+128 | |     ) -> IntersectStatus {
+    | |________________________^ method `CollisionIndex::intersects_tile_edges` is reachable at visibility `pub(crate)`
+    |
+note: but type `IntersectStatus` is only usable at visibility `pub(self)`
+   --> maplibre/src/legacy/collision_index.rs:50:1
+    |
+50  | struct IntersectStatus {
+    | ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `TOP_LEFT_EXTENT` is never used
+  --> maplibre/src/coords.rs:24:7
+   |
+24 | const TOP_LEFT_EXTENT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
+   |       ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: constant `BOTTOM_RIGHT_EXTENT` is never used
+  --> maplibre/src/coords.rs:25:7
+   |
+25 | const BOTTOM_RIGHT_EXTENT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
+   |       ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `EARTH_RADIUS`, `EARTH_CIRCUMFRENCE`, `circumference_at_latitude`, `mercator_x_from_lng`, `mercator_y_from_lat`, and `mercator_z_from_altitude` are never used
+   --> maplibre/src/coords.rs:156:11
+    |
+145 | impl LatLon {
+    | ----------- associated items in this implementation
+...
+156 |     const EARTH_RADIUS: f64 = 6371008.8;
+    |           ^^^^^^^^^^^^
+...
+160 |     const EARTH_CIRCUMFRENCE: f64 = 2.0 * PI * Self::EARTH_RADIUS; // meters
+    |           ^^^^^^^^^^^^^^^^^^
+...
+163 |     fn circumference_at_latitude(&self) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+167 |     fn mercator_x_from_lng(&self) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^
+...
+171 |     fn mercator_y_from_lat(&self) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^
+...
+175 |     fn mercator_z_from_altitude(&self, altitude: f64) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `clip_to_window_maplibre`, `clip_to_window_vulkan`, and `window_to_world_nalgebra` are never used
+   --> maplibre/src/render/view_state.rs:261:19
+    |
+42  | impl ViewState {
+    | -------------- associated items in this implementation
+...
+261 |     pub(crate) fn clip_to_window_maplibre(&self, clip: &Vector4<f64>) -> Vector4<f64> {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^
+...
+276 |     fn clip_to_window_vulkan(&self, clip: &Vector4<f64>) -> Vector3<f64> {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+...
+332 |     fn window_to_world_nalgebra(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAIN_PASS` is never used
+  --> maplibre/src/debug/mod.rs:37:19
+   |
+37 |         pub const MAIN_PASS: &str = "main_pass";
+   |                   ^^^^^^^^^
+
+warning: field `project` is never read
+  --> maplibre/src/geojson/mod.rs:38:5
+   |
+33 | pub struct ProjectingTessellator<T> {
+   |            --------------------- field in this struct
+...
+38 |     project: bool,
+   |     ^^^^^^^
+
+warning: fields `current_index` and `current_origin` are never read
+  --> maplibre/src/sdf/tessellation_new.rs:56:5
+   |
+42 | pub struct TextTessellatorNew {
+   |            ------------------ fields in this struct
+...
+56 |     current_index: usize,
+   |     ^^^^^^^^^^^^^
+57 |     current_text: Option<String>,
+58 |     current_origin: Option<Box2D<f32, TileSpace>>,
+   |     ^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+  --> maplibre/src/legacy/glyph.rs:35:8
+   |
+35 |     if end > 65535 {
+   |        ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_comparisons)]` on by default
+
+warning: variable `imageMap` should have a snake case name
+   --> maplibre/src/legacy/layout/symbol_layout.rs:817:13
+    |
+817 |             imageMap,
+    |             ^^^^^^^^ help: convert the identifier to snake case: `image_map`
+    |
+    = note: `#[warn(non_snake_case)]` on by default
+
+warning: `maplibre` (lib) generated 26 warnings (run `cargo fix --lib -p maplibre` to apply 5 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.41s
+     Running `target/debug/render-tests`
+Running 1491 render tests from render-tests/src/tests
+----------------------------------------------------------------------
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2990)  background-color/colorSpace-hcl  (57.0ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3549)  background-color/colorSpace-lab  (33.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  background-color/default  (31.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2500)  background-color/function  (31.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  background-color/literal  (32.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2510)  background-color/transition  (32.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1245)  background-opacity/color  (33.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2579)  background-opacity/image  (32.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  background-opacity/overlay  (559.2µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  ERR   Image comparison failed: Dimension mismatch: actual 64x64 vs expected 128x128  background-pattern/@2x  (37.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5545)  background-pattern/literal  (33.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2500)  background-pattern/missing  (32.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5976)  background-pattern/pitch  (33.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5999)  background-pattern/rotated  (33.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5957)  background-pattern/zoomed  (31.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2500)  background-visibility/none  (30.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  background-visibility/visible  (31.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.8567)  basic-v9/z0  (403.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.8543)  basic-v9/z0-narrow-y  (418.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.8550)  basic-v9/z0-wide-x  (445.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.9108)  bright-v9/z0  (406.3ms)
+  ERR   Cannot deserialize Style: unknown variant `canvas`, expected one of `vector`, `raster`, `geojson`  canvas/default  (744.7µs)
+  ERR   Cannot deserialize Style: unknown variant `canvas`, expected one of `vector`, `raster`, `geojson`  canvas/power-of-two  (670.5µs)
+  ERR   Cannot deserialize Style: unknown variant `canvas`, expected one of `vector`, `raster`, `geojson`  canvas/update  (535.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1368)  circle-blur/blending  (32.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-blur/default  (31.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-blur/function  (30.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0221)  circle-blur/literal  (30.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0654)  circle-blur/literal-stroke  (31.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0239)  circle-blur/property-function  (35.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0329)  circle-blur/zoom-and-property-function  (36.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-color/default  (33.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0538)  circle-color/function  (31.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  circle-color/global-state  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  circle-color/global-state-with-get  (32.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0729)  circle-color/literal  (31.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0633)  circle-color/property-function  (30.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0921)  circle-color/zoom-and-property-function  (30.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0029)  circle-geometry/linestring  (103.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0059)  circle-geometry/multilinestring  (78.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0029)  circle-geometry/multipoint  (76.0ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0119)  circle-geometry/multipolygon  (75.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0014)  circle-geometry/point  (77.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0059)  circle-geometry/polygon  (75.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0136)  circle-opacity/blending  (30.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-opacity/default  (30.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0103)  circle-opacity/function  (31.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0103)  circle-opacity/literal  (33.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0155)  circle-opacity/property-function  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0104)  circle-opacity/zoom-and-property-function  (33.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1470)  circle-pitch-alignment/map-scale-map  (107.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1197)  circle-pitch-alignment/map-scale-viewport  (107.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2263)  circle-pitch-alignment/viewport-scale-map  (107.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0980)  circle-pitch-alignment/viewport-scale-viewport  (203.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2263)  circle-pitch-scale/default  (110.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2263)  circle-pitch-scale/map  (110.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0980)  circle-pitch-scale/viewport  (203.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0011)  circle-radius/antimeridian  (386.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0078)  circle-radius/default  (32.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-radius/function  (30.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0215)  circle-radius/global-state  (30.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0361)  circle-radius/global-state-with-get  (31.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0215)  circle-radius/literal  (31.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0104)  circle-radius/property-function  (32.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0023)  circle-radius/zoom-and-property-function  (31.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1988)  circle-sort-key/literal  (31.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0394)  circle-stroke-color/default  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0451)  circle-stroke-color/function  (31.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0507)  circle-stroke-color/literal  (31.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0479)  circle-stroke-color/property-function  (33.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0564)  circle-stroke-color/zoom-and-property-function  (30.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0578)  circle-stroke-opacity/default  (31.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0455)  circle-stroke-opacity/function  (30.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0455)  circle-stroke-opacity/literal  (29.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0491)  circle-stroke-opacity/property-function  (30.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0268)  circle-stroke-opacity/stroke-only  (30.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0479)  circle-stroke-opacity/zoom-and-property-function  (32.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0363)  circle-stroke-width/default  (30.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0578)  circle-stroke-width/function  (30.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0578)  circle-stroke-width/literal  (30.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0624)  circle-stroke-width/property-function  (30.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0443)  circle-stroke-width/zoom-and-property-function  (30.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-translate/default  (30.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0338)  circle-translate/function  (30.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  circle-translate/literal  (30.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0046)  circle-translate-anchor/map  (31.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0078)  circle-translate-anchor/viewport  (32.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0400)  collator/default  (143.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0071)  collator/resolved-locale  (47.5ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  color-relief/hillshade  (817.2µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  color-relief/opacity  (740.1µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  color-relief/rainbow  (575.4µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  color-relief/transparency  (447.0µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5000)  combinations/background-opaque--background-opaque  (32.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2500)  combinations/background-opaque--background-translucent  (33.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0316)  combinations/background-opaque--circle-translucent  (31.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0991)  combinations/background-opaque--fill-extrusion-translucent  (31.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1059)  combinations/background-opaque--fill-opaque  (49.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0538)  combinations/background-opaque--fill-translucent  (52.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.4150)  combinations/background-opaque--heatmap-translucent  (33.4ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/background-opaque--hillshade-translucent  (688.8µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0139)  combinations/background-opaque--line-translucent  (50.0ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/background-opaque--raster-translucent  (556.3µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0101)  combinations/background-opaque--symbol-translucent  (47.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5000)  combinations/background-translucent--background-opaque  (30.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3961)  combinations/background-translucent--background-translucent  (30.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1495)  combinations/background-translucent--circle-translucent  (30.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1989)  combinations/background-translucent--fill-extrusion-translucent  (32.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2054)  combinations/background-translucent--fill-opaque  (49.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1830)  combinations/background-translucent--fill-translucent  (54.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5304)  combinations/background-translucent--heatmap-translucent  (33.5ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/background-translucent--hillshade-translucent  (585.0µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1384)  combinations/background-translucent--line-translucent  (48.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/background-translucent--raster-translucent  (528.1µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1327)  combinations/background-translucent--symbol-translucent  (44.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  combinations/circle-translucent--background-opaque  (31.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1330)  combinations/circle-translucent--background-translucent  (32.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0359)  combinations/circle-translucent--circle-translucent  (33.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1296)  combinations/circle-translucent--fill-extrusion-translucent  (31.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1311)  combinations/circle-translucent--fill-opaque  (46.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1075)  combinations/circle-translucent--fill-translucent  (49.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5949)  combinations/circle-translucent--heatmap-translucent  (31.8ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/circle-translucent--hillshade-translucent  (530.2µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0488)  combinations/circle-translucent--line-translucent  (48.2ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/circle-translucent--raster-translucent  (572.6µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0462)  combinations/circle-translucent--symbol-translucent  (46.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1060)  combinations/fill-extrusion--fill-opaque  (48.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1080)  combinations/fill-extrusion--fill-translucent  (50.0ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0057)  combinations/fill-extrusion-translucent--background-opaque  (31.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1496)  combinations/fill-extrusion-translucent--background-translucent  (31.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1289)  combinations/fill-extrusion-translucent--circle-translucent  (31.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1034)  combinations/fill-extrusion-translucent--fill-extrusion-translucent  (33.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1060)  combinations/fill-extrusion-translucent--fill-opaque  (50.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0948)  combinations/fill-extrusion-translucent--fill-translucent  (51.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5986)  combinations/fill-extrusion-translucent--heatmap-translucent  (34.4ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/fill-extrusion-translucent--hillshade-translucent  (648.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1133)  combinations/fill-extrusion-translucent--line-translucent  (49.6ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/fill-extrusion-translucent--raster-translucent  (594.0µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1080)  combinations/fill-extrusion-translucent--symbol-translucent  (46.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  combinations/fill-opaque--background-opaque  (49.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1518)  combinations/fill-opaque--background-translucent  (53.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1311)  combinations/fill-opaque--circle-translucent  (51.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1093)  combinations/fill-opaque--fill-extrusion-translucent  (55.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1088)  combinations/fill-opaque--fill-opaque  (54.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1085)  combinations/fill-opaque--fill-translucent  (55.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5978)  combinations/fill-opaque--heatmap-translucent  (51.9ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/fill-opaque--hillshade-translucent  (716.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1104)  combinations/fill-opaque--line-translucent  (53.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/fill-opaque--raster-translucent  (648.1µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1129)  combinations/fill-opaque--symbol-translucent  (64.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  combinations/fill-translucent--background-opaque  (50.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1471)  combinations/fill-translucent--background-translucent  (51.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1075)  combinations/fill-translucent--circle-translucent  (51.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1081)  combinations/fill-translucent--fill-extrusion-translucent  (51.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1083)  combinations/fill-translucent--fill-opaque  (50.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0950)  combinations/fill-translucent--fill-translucent  (55.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5942)  combinations/fill-translucent--heatmap-translucent  (51.8ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/fill-translucent--hillshade-translucent  (677.0µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0874)  combinations/fill-translucent--line-translucent  (51.0ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/fill-translucent--raster-translucent  (681.5µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0882)  combinations/fill-translucent--symbol-translucent  (63.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2016)  combinations/heatmap-translucent--background-opaque  (33.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1588)  combinations/heatmap-translucent--background-translucent  (32.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5879)  combinations/heatmap-translucent--circle-translucent  (32.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5771)  combinations/heatmap-translucent--fill-extrusion-translucent  (32.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5962)  combinations/heatmap-translucent--fill-opaque  (50.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5789)  combinations/heatmap-translucent--fill-translucent  (54.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.6457)  combinations/heatmap-translucent--heatmap-translucent  (34.1ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/heatmap-translucent--hillshade-translucent  (579.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5903)  combinations/heatmap-translucent--line-translucent  (51.6ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/heatmap-translucent--raster-translucent  (747.0µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5902)  combinations/heatmap-translucent--symbol-translucent  (48.3ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--background-opaque  (648.3µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--background-translucent  (480.5µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--circle-translucent  (677.3µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--fill-extrusion-translucent  (492.5µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--fill-opaque  (500.7µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--fill-translucent  (478.3µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--heatmap-translucent  (515.8µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--hillshade-translucent  (418.2µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--line-translucent  (508.7µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--raster-translucent  (539.3µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/hillshade-translucent--symbol-translucent  (432.7µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  combinations/line-translucent--background-opaque  (48.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1297)  combinations/line-translucent--background-translucent  (51.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0488)  combinations/line-translucent--circle-translucent  (52.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1139)  combinations/line-translucent--fill-extrusion-translucent  (53.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1109)  combinations/line-translucent--fill-opaque  (51.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0874)  combinations/line-translucent--fill-translucent  (52.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5936)  combinations/line-translucent--heatmap-translucent  (53.6ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/line-translucent--hillshade-translucent  (569.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0234)  combinations/line-translucent--line-translucent  (52.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/line-translucent--raster-translucent  (578.3µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0304)  combinations/line-translucent--symbol-translucent  (68.5ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--background-opaque  (619.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--background-translucent  (523.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--circle-translucent  (552.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--fill-extrusion-translucent  (503.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--fill-opaque  (494.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--fill-translucent  (465.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--heatmap-translucent  (691.9µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/raster-translucent--hillshade-translucent  (645.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--line-translucent  (456.6µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--raster-translucent  (459.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/raster-translucent--symbol-translucent  (539.9µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  combinations/symbol-translucent--background-opaque  (48.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1273)  combinations/symbol-translucent--background-translucent  (48.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0462)  combinations/symbol-translucent--circle-translucent  (48.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1086)  combinations/symbol-translucent--fill-extrusion-translucent  (48.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1129)  combinations/symbol-translucent--fill-opaque  (66.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0882)  combinations/symbol-translucent--fill-translucent  (64.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.5933)  combinations/symbol-translucent--heatmap-translucent  (48.5ms)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  combinations/symbol-translucent--hillshade-translucent  (654.0µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0304)  combinations/symbol-translucent--line-translucent  (68.0ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  combinations/symbol-translucent--raster-translucent  (566.3µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0234)  combinations/symbol-translucent--symbol-translucent  (60.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1164)  custom-layer-js/depth  (48.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0488)  custom-layer-js/null-island  (31.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0863)  custom-layer-js/tent-3d  (204.8ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/collision  (830.6µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1653)  debug/collision-horizon-cutoff  (381.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0019)  debug/collision-icon-text-line-translate  (1.3s)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0037)  debug/collision-icon-text-point-translate  (158.3ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/collision-lines  (700.4µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0307)  debug/collision-lines-large-font  (115.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0116)  debug/collision-lines-notocjk  (114.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0128)  debug/collision-lines-overscaled  (114.8ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/collision-lines-pitched  (791.7µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0045)  debug/collision-lines-pitched-2  (411.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0107)  debug/collision-lines-simple-words  (116.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0027)  debug/collision-lines-simple-words-pitched  (412.7ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/collision-overscaled  (689.8µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0017)  debug/collision-pitch-with-map-distant  (175.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0134)  debug/collision-pitched  (392.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0726)  debug/collision-pitched-wrapped  (401.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0158)  debug/collision-variable-anchor/base  (225.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0520)  debug/collision-variable-anchor/pitched  (225.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2259)  debug/collision-variable-anchor/pitched-and-rotated  (520.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0818)  debug/collision-variable-anchor/rotated  (517.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/overdraw  (771.0µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1077)  debug/padding/ease-to-btm-distort  (234.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0968)  debug/padding/ease-to-left-distort  (238.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0968)  debug/padding/ease-to-no-distort  (233.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0952)  debug/padding/ease-to-right-distort  (255.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0865)  debug/padding/ease-to-top-distort  (278.0ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0570)  debug/padding/set-padding  (241.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/raster  (701.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/tile  (736.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  debug/tile-raster  (562.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0241)  distance/paint-text  (93.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  empty/empty  (32.3ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  extent/1024-circle  (624.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  extent/1024-fill  (688.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  extent/1024-line  (408.5µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0087)  feature-state/composite-expression  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0087)  feature-state/data-expression  (30.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0425)  feature-state/promote-id-circle  (20.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0820)  feature-state/promote-id-fill  (20.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1366)  feature-state/promote-id-fill-extrusion  (112.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0923)  feature-state/promote-id-line  (21.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0570)  feature-state/promote-id-symbol  (36.3ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  feature-state/vector-source  (708.5µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  feature-state/with-global-state  (31.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  field-of-view/default  (566.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  field-of-view/field-of-view-10  (540.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  field-of-view/field-of-view-150  (440.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  field-of-view/field-of-view-90  (491.1µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  fill-antialias/false  (50.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  fill-color/default  (54.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0719)  fill-color/function  (85.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2117)  fill-color/global-state  (57.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2117)  fill-color/global-state-with-get  (57.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  fill-color/literal  (55.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0120)  fill-color/multiply  (52.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0238)  fill-color/opacity  (54.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1411)  fill-color/property-function  (34.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1501)  fill-color/zoom-and-property-function  (33.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0625)  fill-extrusion-base/default  (410.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0785)  fill-extrusion-base/function  (408.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0737)  fill-extrusion-base/literal  (409.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0721)  fill-extrusion-base/negative  (412.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0936)  fill-extrusion-base/property-function  (438.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1242)  fill-extrusion-base/zoom-and-property-function  (426.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0818)  fill-extrusion-color/default  (202.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1684)  fill-extrusion-color/function  (201.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1654)  fill-extrusion-color/global-state  (205.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1664)  fill-extrusion-color/global-state-with-get  (203.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1490)  fill-extrusion-color/literal  (202.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1030)  fill-extrusion-color/no-alpha-no-multiply  (205.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1319)  fill-extrusion-color/property-function  (203.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1775)  fill-extrusion-color/zoom-and-property-function  (206.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0270)  fill-extrusion-geometry/linestring  (50.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0617)  fill-extrusion-height/default  (201.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1453)  fill-extrusion-height/function  (202.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0712)  fill-extrusion-height/negative  (205.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0887)  fill-extrusion-height/property-function  (202.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0665)  fill-extrusion-height/zoom-and-property-function  (204.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1607)  fill-extrusion-multiple/interleaved-layers  (213.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1593)  fill-extrusion-multiple/multiple  (213.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2805)  fill-extrusion-opacity/default  (230.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3509)  fill-extrusion-opacity/function  (229.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3202)  fill-extrusion-opacity/literal  (231.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0999)  fill-extrusion-pattern/2x-on-1x-add-image-dds  (143.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 512x256 vs expected 1024x512  fill-extrusion-pattern/@2x  (316.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1159)  fill-extrusion-pattern/feature-expression  (214.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1146)  fill-extrusion-pattern/function  (219.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.4553)  fill-extrusion-pattern/function-2  (223.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2101)  fill-extrusion-pattern/global-state  (221.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1146)  fill-extrusion-pattern/literal  (215.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  fill-extrusion-pattern/missing  (199.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0970)  fill-extrusion-pattern/opacity  (220.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1670)  fill-extrusion-translate/default  (230.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1989)  fill-extrusion-translate/function  (232.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1946)  fill-extrusion-translate/literal  (225.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2313)  fill-extrusion-translate/literal-opacity  (227.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0431)  fill-extrusion-translate-anchor/map  (221.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0515)  fill-extrusion-translate-anchor/viewport  (222.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3231)  fill-extrusion-vertical-gradient/default  (209.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3400)  fill-extrusion-vertical-gradient/false  (211.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0540)  fill-opacity/default  (34.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0269)  fill-opacity/function  (51.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0355)  fill-opacity/literal  (49.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2094)  fill-opacity/opaque-fill-over-symbol-layer  (30.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0676)  fill-opacity/overlapping  (410.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0176)  fill-opacity/property-function  (53.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1719)  fill-opacity/property-function-pattern  (51.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0287)  fill-opacity/zoom-and-property-function  (51.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2072)  fill-opacity/zoom-and-property-function-pattern  (50.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  fill-outline-color/default  (50.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0080)  fill-outline-color/fill  (51.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0106)  fill-outline-color/function  (51.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0141)  fill-outline-color/literal  (51.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0036)  fill-outline-color/multiply  (52.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0102)  fill-outline-color/opacity  (52.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0222)  fill-outline-color/property-function  (53.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0246)  fill-outline-color/zoom-and-property-function  (53.0ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  fill-outside-tile  (596.3µs)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 64x64 vs expected 128x128  fill-pattern/3x-on-2x-add-image  (37.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 64x64 vs expected 128x128  fill-pattern/@2x  (54.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1679)  fill-pattern/case-data-expression  (54.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1681)  fill-pattern/global-state  (54.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0000)  fill-pattern/invalid-feature-expression  (53.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1075)  fill-pattern/literal  (50.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0479)  fill-pattern/missing  (55.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1259)  fill-pattern/opacity  (51.2ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  fill-pattern/precision  (584.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  fill-pattern/uneven-pattern  (409.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  fill-pattern/wrapping-with-interpolation  (413.4µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2631)  fill-pattern/zoomed  (51.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1242)  fill-sort-key/literal  (22.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  fill-translate/default  (50.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0751)  fill-translate/function  (49.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0311)  fill-translate/literal  (50.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0562)  fill-translate-anchor/map  (50.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0562)  fill-translate-anchor/viewport  (48.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  fill-visibility/none  (601.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  fill-visibility/visible  (455.5µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0081)  filter/equality  (32.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0081)  filter/global-state  (31.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.4453)  filter/in  (34.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0081)  filter/legacy-equality  (31.5ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  filter/modulo  (556.0µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0162)  filter/none  (31.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0727)  geojson/clustered  (398.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1034)  geojson/clustered-filter  (79.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1125)  geojson/clustered-properties  (77.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0071)  geojson/external-feature  (386.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  geojson/external-invalid  (384.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0071)  geojson/external-linestring  (384.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  geojson/external-malformed  (385.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1000)  geojson/inconsistent-winding-order  (386.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0071)  geojson/inline-feature  (431.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  geojson/inline-invalid  (384.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0156)  geojson/inline-linestring-circle  (33.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0061)  geojson/inline-linestring-line  (32.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0412)  geojson/inline-linestring-symbol  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  geojson/inline-malformed  (389.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0039)  geojson/inline-point-circle  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  geojson/inline-point-fill  (31.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  geojson/inline-point-line  (33.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0412)  geojson/inline-point-symbol  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0158)  geojson/inline-polygon-circle  (33.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0540)  geojson/inline-polygon-fill  (33.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0070)  geojson/inline-polygon-line  (33.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0412)  geojson/inline-polygon-symbol  (31.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0039)  geojson/null-geometry  (33.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0073)  geojson/reparse-overscaled  (391.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0047)  geometry-type/all-geometries  (395.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  global-state/basic  (32.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0346)  global-state/default  (32.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  global-state/set-property  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  global-state/with-feature-state/basic  (31.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  global-state/with-feature-state/set-and-remove  (32.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1112)  global-state/with-get  (32.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-color/default  (521.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-color/expression  (407.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-intensity/default  (454.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-intensity/function  (403.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-intensity/literal  (395.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-opacity/default  (370.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-opacity/function  (491.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-opacity/literal  (556.3µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1075)  heatmap-radius/antimeridian  (61.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0668)  heatmap-radius/data-expression  (31.6ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-radius/default  (527.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-radius/function  (405.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-radius/literal  (392.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-radius/pitch30  (413.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-weight/default  (389.6µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-weight/identity-property-function  (352.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  heatmap-weight/literal  (354.4µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1636)  high-pitch/pitch95  (395.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1694)  high-pitch/pitch95-roll135  (430.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  high-pitch/terrain-pitch95  (718.0µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-accent-color/default  (606.3µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-accent-color/literal  (514.3µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-accent-color/terrarium  (389.4µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-accent-color/zoom-function  (393.7µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-alt/basic-0  (506.2µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-alt/basic-90  (433.5µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-alt/combined-60  (394.5µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-highlight-color/default  (382.9µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-highlight-color/literal  (397.6µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-highlight-color/zoom-function  (372.8µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-maxzoom/default  (466.8µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-maxzoom/overzoom  (381.2µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-methods/basic  (424.8µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-methods/combined  (459.9µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-methods/igor  (465.1µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-methods/multidirectional  (405.5µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-shadow-color/default  (558.7µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-shadow-color/literal  (418.5µs)
+  ERR   Cannot deserialize Style: unknown variant `raster-dem`, expected one of `vector`, `raster`, `geojson`  hillshade-shadow-color/zoom-function  (439.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/bottom  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/bottom-left  (32.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/bottom-right  (30.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/center  (30.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/default  (30.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/left  (32.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0028)  icon-anchor/property-function  (139.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/right  (33.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/top  (33.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/top-left  (33.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-anchor/top-right  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-color/default  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0118)  icon-color/function  (47.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0118)  icon-color/literal  (46.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0233)  icon-color/property-function  (47.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0166)  icon-halo-blur/default  (45.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0341)  icon-halo-blur/function  (44.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0226)  icon-halo-blur/literal  (45.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0434)  icon-halo-blur/property-function  (46.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-halo-color/default  (47.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0166)  icon-halo-color/function  (49.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0166)  icon-halo-color/literal  (49.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0119)  icon-halo-color/multiply  (48.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0125)  icon-halo-color/opacity  (47.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0333)  icon-halo-color/property-function  (47.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0000)  icon-halo-color/transparent  (48.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-halo-width/default  (48.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0273)  icon-halo-width/function  (53.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0166)  icon-halo-width/literal  (48.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0331)  icon-halo-width/property-function  (48.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-image/image-expression  (32.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0051)  icon-image/literal  (33.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0873)  icon-image/property-function  (31.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0870)  icon-image/stretchable  (81.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3214)  icon-image/stretchable-content  (81.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0873)  icon-image/token  (32.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0250)  icon-no-cross-source-collision/default  (60.2ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-offset/literal  (665.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-offset/property-function  (514.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-offset/zoom-and-property-function  (453.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-opacity/default  (495.6µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-opacity/function  (405.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-opacity/icon-only  (533.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-opacity/literal  (683.3µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0207)  icon-opacity/property-function  (48.0ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-opacity/text-and-icon  (725.6µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-opacity/text-only  (539.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0632)  icon-overlap/always  (75.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0416)  icon-overlap/cooperative  (77.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0201)  icon-overlap/default  (74.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0299)  icon-overlap/never  (76.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0306)  icon-padding/databind  (64.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0332)  icon-padding/default  (61.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0043)  icon-pitch-alignment/auto-rotation-alignment-map  (32.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0040)  icon-pitch-alignment/auto-rotation-alignment-viewport  (31.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0039)  icon-pitch-alignment/map-rotation-alignment-viewport  (30.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0059)  icon-pitch-alignment/viewport-rotation-alignment-map  (30.2ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-pitch-scaling/rotation-alignment-map  (568.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-pitch-scaling/rotation-alignment-viewport  (529.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-pixelratio-mismatch/default  (404.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0041)  icon-roll-alignment/auto-rotation-alignment-map  (30.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0040)  icon-roll-alignment/auto-rotation-alignment-viewport  (30.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0039)  icon-roll-alignment/map-rotation-alignment-viewport  (31.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0058)  icon-roll-alignment/viewport-rotation-alignment-map  (33.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0118)  icon-rotate/literal  (30.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0107)  icon-rotate/property-function  (30.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0005)  icon-rotate/with-offset  (109.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0060)  icon-rotation-alignment/auto-symbol-placement-line  (31.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0040)  icon-rotation-alignment/auto-symbol-placement-point  (31.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0060)  icon-rotation-alignment/map-symbol-placement-line  (31.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0061)  icon-rotation-alignment/map-symbol-placement-point  (32.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0040)  icon-rotation-alignment/viewport-symbol-placement-line  (32.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0040)  icon-rotation-alignment/viewport-symbol-placement-point  (30.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0159)  icon-size/camera-function-high-base-plain  (44.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0138)  icon-size/camera-function-high-base-sdf  (45.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0428)  icon-size/camera-function-plain  (47.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0250)  icon-size/camera-function-sdf  (46.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0428)  icon-size/composite-function-plain  (45.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0250)  icon-size/composite-function-sdf  (45.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0555)  icon-size/default  (31.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1385)  icon-size/function  (31.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2470)  icon-size/global-state  (32.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2470)  icon-size/literal  (32.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0556)  icon-size/property-function-plain  (48.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0367)  icon-size/property-function-sdf  (48.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0771)  icon-text-fit/both  (33.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2982)  icon-text-fit/both-collision  (33.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1549)  icon-text-fit/both-collision-variable-anchor  (32.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3458)  icon-text-fit/both-collision-variable-anchor-text-fit  (33.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2146)  icon-text-fit/both-padding  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1246)  icon-text-fit/both-text-anchor  (83.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 200x150 vs expected 400x300  icon-text-fit/both-text-anchor-1x-image-2x-screen  (112.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1304)  icon-text-fit/both-text-anchor-2x-image-1x-screen  (82.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 200x150 vs expected 400x300  icon-text-fit/both-text-anchor-2x-image-2x-screen  (110.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1246)  icon-text-fit/both-text-anchor-icon-anchor  (83.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1321)  icon-text-fit/both-text-anchor-icon-offset  (82.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2393)  icon-text-fit/both-text-anchor-padding  (84.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3238)  icon-text-fit/enlargen-both-padding  (39.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0562)  icon-text-fit/enlargen-height  (37.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0783)  icon-text-fit/enlargen-width  (37.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1455)  icon-text-fit/height  (33.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2237)  icon-text-fit/height-padding  (34.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0772)  icon-text-fit/height-text-anchor  (80.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1027)  icon-text-fit/height-text-anchor-padding  (84.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2880)  icon-text-fit/none  (35.1ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-text-fit/placement-line  (598.4µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2108)  icon-text-fit/stretch-fifteen-part  (82.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2086)  icon-text-fit/stretch-nine-part  (83.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2117)  icon-text-fit/stretch-nine-part-@2x  (82.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3169)  icon-text-fit/stretch-nine-part-content  (83.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1478)  icon-text-fit/stretch-nine-part-content-collision  (82.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1600)  icon-text-fit/stretch-nine-part-just-height  (84.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3525)  icon-text-fit/stretch-nine-part-just-width  (82.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2146)  icon-text-fit/stretch-three-part  (81.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2045)  icon-text-fit/stretch-two-part  (82.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2053)  icon-text-fit/stretch-underscale  (83.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-text-fit/text-variable-anchor  (808.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-text-fit/text-variable-anchor-overlap  (731.6µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.4567)  icon-text-fit/textFit-anchors-long  (81.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2466)  icon-text-fit/textFit-anchors-short  (83.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3013)  icon-text-fit/textFit-collision  (31.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2571)  icon-text-fit/textFit-grid-long  (186.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1848)  icon-text-fit/textFit-grid-long-vertical  (234.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1287)  icon-text-fit/textFit-grid-short  (125.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0773)  icon-text-fit/textFit-grid-short-vertical  (236.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1615)  icon-text-fit/width  (31.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2777)  icon-text-fit/width-padding  (31.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0582)  icon-text-fit/width-text-anchor  (81.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0795)  icon-text-fit/width-text-anchor-padding  (79.4ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-translate/default  (603.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-translate/function  (521.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-translate/literal  (452.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-translate-anchor/map  (437.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-translate-anchor/viewport  (386.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-visibility/none  (535.7µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  icon-visibility/visible  (522.5µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/default  (710.2µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/pitched  (400.9µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-brightness  (381.2µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-contrast  (401.8µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-hue-rotate  (430.2µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-opacity  (389.2µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-resampling  (382.0µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-saturation  (372.7µs)
+  ERR   Cannot deserialize Style: unknown variant `image`, expected one of `vector`, `raster`, `geojson`  image/raster-visibility  (395.2µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0083)  is-supported-script/filter  (60.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0296)  is-supported-script/layout  (61.1ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-blur/default  (626.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-blur/function  (512.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-blur/literal  (523.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-blur/property-function  (472.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-cap/butt  (487.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-cap/round  (459.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-cap/square  (585.7µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-color/default  (484.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-color/function  (444.7µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0664)  line-color/global-state  (33.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0664)  line-color/global-state-with-get  (34.3ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-color/literal  (706.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-color/property-function  (511.1µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0343)  line-color/property-function-identity  (36.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0112)  line-dasharray/case/butt  (121.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0017)  line-dasharray/default  (38.7ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-dasharray/diagonal-dash  (724.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0014)  line-dasharray/fractional-zoom  (60.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0133)  line-dasharray/function/line-width-composite-function  (55.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0069)  line-dasharray/function/line-width-constant  (52.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0076)  line-dasharray/function/line-width-property-function  (52.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0177)  line-dasharray/literal/line-width-composite-function  (50.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0131)  line-dasharray/literal/line-width-constant  (53.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0101)  line-dasharray/literal/line-width-property-function  (53.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0068)  line-dasharray/literal/line-width-zoom-function  (49.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0791)  line-dasharray/long-segment  (220.2ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-dasharray/overscaled  (616.3µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0155)  line-dasharray/property-function/cap-default  (52.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0247)  line-dasharray/property-function/cap-round  (49.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0331)  line-dasharray/round/segments  (54.8ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0475)  line-dasharray/round/single-dasharray-element  (58.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0341)  line-dasharray/round/zero-gap-width  (55.5ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-dasharray/slant  (547.8µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1640)  line-dasharray/zero-length-gap  (82.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0034)  line-dasharray/zoom-history  (414.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0112)  line-gap-width/default  (33.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0306)  line-gap-width/function  (53.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0314)  line-gap-width/literal  (51.7ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-gap-width/property-function  (645.7µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.4868)  line-gradient/color-interpolation-rgb-hcl-lab  (589.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3563)  line-gradient/color-interpolation-transparent  (586.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2273)  line-gradient/gradient  (66.7ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2108)  line-gradient/gradient-shared-source  (68.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1143)  line-gradient/gradient-step  (50.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0222)  line-gradient/gradient-step-zoomed  (96.1ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0139)  line-gradient/gradient-step-zoomed-cross-continental  (63.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1070)  line-gradient/gradient-tile-boundaries  (53.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1381)  line-gradient/translucent  (65.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.3354)  line-gradient-dasharray/color-interpolation-hcl-lab  (567.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1993)  line-gradient-dasharray/gradient-shared-source  (98.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0843)  line-gradient-dasharray/gradient-tile-boundaries  (55.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2498)  line-gradient-dasharray/gradient-with-dash  (51.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1036)  line-gradient-dasharray/property-function  (58.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1994)  line-gradient-dasharray/step-gradient  (56.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.2295)  line-gradient-dasharray/translucent  (54.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0661)  line-join/bevel  (60.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0416)  line-join/bevel-transparent  (55.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0661)  line-join/default  (55.2ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0661)  line-join/miter  (57.3ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0416)  line-join/miter-transparent  (54.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0715)  line-join/property-function  (58.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0425)  line-join/property-function-dasharray  (58.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0690)  line-join/round  (58.9ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0437)  line-join/round-transparent  (57.6ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-offset/default  (679.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-offset/function  (471.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-offset/literal  (403.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-offset/literal-negative  (461.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-offset/property-function  (448.6µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0732)  line-opacity/default  (51.4ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0427)  line-opacity/function  (52.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0295)  line-opacity/literal  (55.1ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-opacity/property-function  (646.3µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1854)  line-opacity/step-curve  (52.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0078)  line-overlap  (1.6s)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 64x32 vs expected 128x64  line-pattern/3x-on-2x-add-image  (23.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 64x64 vs expected 128x128  line-pattern/@2x  (52.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0230)  line-pattern/global-state  (79.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0743)  line-pattern/literal  (49.5ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0659)  line-pattern/opacity  (50.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0521)  line-pattern/overscaled  (71.5ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-pattern/pitch  (534.8µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0230)  line-pattern/property-function  (77.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0209)  line-pattern/step-curve  (79.0ms)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.0743)  line-pattern/with-dasharray  (50.0ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0208)  line-pattern/zoom-expression  (79.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-pitch/default  (752.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-pitch/pitch0  (607.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-pitch/pitch15  (538.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-pitch/pitch30  (445.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-pitch/pitchAndBearing  (435.5µs)
+queue_system: start
+queue_system: metadatas is empty!
+  FAIL  (diff=0.1781)  line-sort-key/literal  (21.7ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-translate/default  (607.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-translate/function  (436.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-translate/literal  (486.6µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-translate-anchor/map  (410.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-translate-anchor/viewport  (391.5µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0114)  line-triangulation/default  (418.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  PASS  (diff=0.0124)  line-triangulation/round  (523.0ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-visibility/none  (635.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-visibility/visible  (558.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-width/default  (433.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-width/function  (448.4µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-width/literal  (403.6µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-width/property-function  (390.5µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  line-width/very-overscaled  (533.3µs)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0032)  line-width/zero-width  (66.6ms)
+queue_system: start
+queue_system: metadatas is empty!
+  PASS  (diff=0.0032)  line-width/zero-width-function  (67.5ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  linear-filter-opacity-edge/literal  (552.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  mlt/render-layers/render-building  (424.2µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  mlt/render-layers/render-housenr  (408.1µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  mlt/render-layers/render-labels  (519.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  mlt/render-layers/render-landcover  (408.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  mlt/render-layers/render-roads  (508.0µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  mlt/render-layers/render-water  (396.0µs)
+queue_system: start
+queue_system: metadatas is empty!
+  ERR   Image comparison failed: Dimension mismatch: actual 1792x256 vs expected 256x256  pixel-ratio/veryhigh  (334.9ms)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  projection/globe/antimeridian-lod  (683.9µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  projection/globe/atmosphere/base  (621.3µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  projection/globe/atmosphere/light-position-map  (405.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  projection/globe/atmosphere/ligth-position-viewport  (391.8µs)
+  ERR   Cannot deserialize Style: invalid type: sequence, expected a string  projection/globe/atmosphere/zoom  (436.7µs)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2916)  projection/globe/background  (390.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.4910)  projection/globe/background-pattern  (431.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2362)  projection/globe/circle-pitch-alignment/map-scale-map  (145.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2387)  projection/globe/circle-pitch-alignment/map-scale-viewport  (143.0ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2474)  projection/globe/circle-pitch-alignment/viewport-scale-map  (143.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2392)  projection/globe/circle-pitch-alignment/viewport-scale-viewport  (145.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.2360)  projection/globe/circle-planet  (148.4ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3189)  projection/globe/collision-icon-text-translate-map  (158.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3796)  projection/globe/collision-text-line-equator  (165.5ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1993)  projection/globe/collision-text-line-pole-to-pole  (164.3ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.4069)  projection/globe/collision-text-pitched-rotated  (159.8ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3203)  projection/globe/collision-text-point-pole-to-pole  (162.6ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3153)  projection/globe/collision-text-variable-anchor/base  (513.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.5246)  projection/globe/collision-text-variable-anchor/pitched  (510.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.4365)  projection/globe/collision-text-variable-anchor/pitched-and-rotated  (516.1ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.3153)  projection/globe/collision-text-variable-anchor/rotated  (514.7ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1902)  projection/globe/custom/tent-3d-globe  (214.9ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.1469)  projection/globe/custom/tent-3d-globe-occlusion  (211.2ms)
+queue_system: start
+queue_system: successfully inserted BackgroundBuffers
+SetBackgroundPipeline::render called
+SetBackgroundPipeline::render success
+  FAIL  (diff=0.0733)  projection/globe/custom/tent-3d-globe-zoomed  (62.6ms)
+
+thread 'main' panicked at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lyon_path-1.0.7/src/path.rs:813:5:
+assertion failed: p.y.is_finite()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/6b00bc3880198600130e1cf62b8f8a93494488cc/library/std/src/panicking.rs:697:5
+   1: core::panicking::panic_fmt
+             at /rustc/6b00bc3880198600130e1cf62b8f8a93494488cc/library/core/src/panicking.rs:75:14
+   2: core::panicking::panic
+             at /rustc/6b00bc3880198600130e1cf62b8f8a93494488cc/library/core/src/panicking.rs:145:5
+   3: lyon_path::path::nan_check
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lyon_path-1.0.7/src/path.rs:813:5
+   4: <lyon_path::path::BuilderImpl as lyon_path::builder::PathBuilder>::begin
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lyon_path-1.0.7/src/path.rs:524:9
+   5: lyon_path::builder::NoAttributes<B>::begin
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lyon_path-1.0.7/src/builder.rs:171:9
+   6: <maplibre::vector::tessellation::ZeroTessellator<I> as geozero::geometry_processor::GeomProcessor>::xy
+             at ./maplibre/src/vector/tessellation.rs:201:13
+   7: <maplibre::geojson::ProjectingTessellator<T> as geozero::geometry_processor::GeomProcessor>::xy
+             at ./maplibre/src/geojson/mod.rs:70:9
+   8: geozero::geojson::geojson_reader::process_coord
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:261:9
+   9: geozero::geojson::geojson_reader::process_linestring
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:274:9
+  10: geozero::geojson::geojson_reader::process_polygon
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:287:9
+  11: geozero::geojson::geojson_reader::process_geojson_geom_n
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:183:41
+  12: geozero::geojson::geojson_reader::process_geojson
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:101:47
+  13: geozero::geojson::geojson_reader::read_geojson
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:57:5
+  14: <geozero::geojson::geojson_reader::GeoJson as geozero::api::GeozeroDatasource>::process
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geozero-0.13.0/src/geojson/geojson_reader.rs:39:9
+  15: maplibre::geojson::process_geojson_features
+             at ./maplibre/src/geojson/mod.rs:220:33
+  16: maplibre::headless::map::HeadlessMap::process_geojson
+             at ./maplibre/src/headless/map.rs:169:9
+  17: render_tests::run_test_inner::{{closure}}
+             at ./render-tests/src/main.rs:192:26
+  18: render_tests::run_test::{{closure}}
+             at ./render-tests/src/main.rs:114:44
+  19: <core::pin::Pin<P> as core::future::future::Future>::poll
+             at /Users/admin/.rustup/toolchains/1.88-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/future.rs:124:9
+  20: tokio::runtime::park::CachedParkThread::block_on::{{closure}}
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/park.rs:284:60
+  21: tokio::task::coop::with_budget
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/task/coop/mod.rs:167:5
+  22: tokio::task::coop::budget
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/task/coop/mod.rs:133:5
+  23: tokio::runtime::park::CachedParkThread::block_on
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/park.rs:284:31
+  24: tokio::runtime::context::blocking::BlockingRegionGuard::block_on
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/context/blocking.rs:66:9
+  25: tokio::runtime::scheduler::multi_thread::MultiThread::block_on::{{closure}}
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/scheduler/multi_thread/mod.rs:87:13
+  26: tokio::runtime::context::runtime::enter_runtime
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/context/runtime.rs:65:16
+  27: tokio::runtime::scheduler::multi_thread::MultiThread::block_on
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/scheduler/multi_thread/mod.rs:86:9
+  28: tokio::runtime::runtime::Runtime::block_on_inner
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/runtime.rs:358:45
+  29: tokio::runtime::runtime::Runtime::block_on
+             at /Users/admin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.45.0/src/runtime/runtime.rs:328:13
+  30: maplibre::platform::noweb::run_multithreaded
+             at ./maplibre/src/platform/noweb/mod.rs:19:5
+  31: render_tests::main
+             at ./render-tests/src/main.rs:465:23
+  32: core::ops::function::FnOnce::call_once
+             at /Users/admin/.rustup/toolchains/1.88-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.

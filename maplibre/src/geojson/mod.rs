@@ -51,6 +51,7 @@ impl<T> ProjectingTessellator<T> {
 
     /// Convert geographic lon/lat to tile-local extent coordinates (0–4096).
     fn project(&self, lon: f64, lat: f64) -> (f64, f64) {
+        let lat = lat.clamp(-85.05112877980659, 85.05112877980659);
         let scale = (1u64 << self.zoom) as f64;
         let mx = (180.0 + lon) / 360.0;
         let my = (180.0 - (180.0 / PI * ((PI / 4.0 + lat * PI / 360.0).tan()).ln())) / 360.0;
