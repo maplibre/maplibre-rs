@@ -71,13 +71,21 @@
   </head>
 
   <body>
-    <h1 style="color: green">All 1 tests passed!</h1>
+    <p class="stats">0 passed / 1 failed / 0 errored out of 1 total</p>
 <h2>Click on an image to toggle between expected and actual</h2>
 The initial image is the actual one
 <div class="tests failed">
-  <h1 style="color: red">Failed Tests (0)</h1>
+  <h1 style="color: red">Failed Tests (1)</h1>
   <button id="toggle-failed">Click to toggle category visibility</button>
-  
+  <div class="test">
+  <h2>fill-color/default</h2>
+  <div class="imagewrap">
+    <div><p>Actual</p><img src="../tests/fill-color/default/actual.png" data-alt-src="../tests/fill-color/default/expected.png"></div>
+    <div><p>Expected</p><img src="../tests/fill-color/default/expected.png"></div>
+    <div class="diff"><p>Diff</p><img src="../tests/fill-color/default/diff.png"></div>
+  </div>
+  <p>FAIL (diff=0.0479)</p>
+</div>
 </div>
 
 <div class="tests errored">
