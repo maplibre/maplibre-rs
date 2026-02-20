@@ -566,3 +566,51 @@ impl Shader for SymbolShader {
         }
     }
 }
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Pod, Zeroable)]
+pub struct BackgroundLayerMetadata {
+    pub color: [f32; 4],
+    pub z_index: f32,
+}
+
+pub struct BackgroundShader {
+    pub format: wgpu::TextureFormat,
+}
+
+impl Shader for BackgroundShader {
+    fn describe_vertex(&self) -> VertexState {
+        VertexState {
+            source: include_str!("background.vertex.wgsl"),
+            entry_point: "main",
+            buffers: vec![VertexBufferLayout {
+                array_stride: std::mem::size_of::<BackgroundLayerMetadata>() as u64,
+                step_mode: wgpu::VertexStepMode::Instance,
+                attributes: vec![
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: 0,
+                    },
+                    wgpu::VertexAttribute {
+                        offset: 16,
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 1,
+                    },
+                ],
+            }],
+        }
+    }
+
+    fn describe_fragment(&self) -> FragmentState {
+        FragmentState {
+            source: include_str!("basic.fragment.wgsl"),
+            entry_point: "main",
+            targets: vec![Some(wgpu::ColorTargetState {
+                format: self.format,
+                blend: None,
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+        }
+    }
+}

@@ -148,6 +148,7 @@ async fn run_test_inner(test_dir: &Path) -> TestResult {
 
     let plugins: Vec<Box<dyn Plugin<_>>> = vec![
         Box::new(RenderPlugin::default()),
+        Box::new(maplibre::background::BackgroundPlugin::default()),
         Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
         Box::new(HeadlessPlugin::new(true)),
     ];

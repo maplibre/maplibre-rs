@@ -129,6 +129,8 @@ pub struct StyleLayer {
     #[serde(skip)]
     pub index: u32, // FIXME: How is this initialized?
     pub id: String, // todo make sure that ids are unique. Styles with non-unique layer ids must not exist
+    #[serde(rename = "type")]
+    pub type_: String,
     // TODO filter
     // TODO layout
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -164,6 +166,7 @@ impl Default for StyleLayer {
         Self {
             index: 0,
             id: "id".to_string(),
+            type_: "background".to_string(),
             maxzoom: None,
             minzoom: None,
             metadata: None,

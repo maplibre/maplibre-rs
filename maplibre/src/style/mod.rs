@@ -45,6 +45,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 0,
                     id: "park".to_string(),
+                    type_: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -57,6 +58,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 1,
                     id: "landuse".to_string(),
+                    type_: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -69,6 +71,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 2,
                     id: "landcover".to_string(),
+                    type_: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -81,6 +84,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 3,
                     id: "transportation".to_string(),
+                    type_: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -93,6 +97,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 4,
                     id: "building".to_string(),
+                    type_: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -105,6 +110,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 4,
                     id: "water".to_string(),
+                    type_: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -117,6 +123,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 6,
                     id: "waterway".to_string(),
+                    type_: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -129,6 +136,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 7,
                     id: "boundary".to_string(),
+                    type_: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -141,6 +149,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 8,
                     id: "raster".to_string(),
+                    type_: "raster".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -151,6 +160,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 9,
                     id: "text".to_string(),
+                    type_: "symbol".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -163,6 +173,7 @@ impl Default for Style {
                 StyleLayer {
                     index: 10,
                     id: "text".to_string(),
+                    type_: "symbol".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
