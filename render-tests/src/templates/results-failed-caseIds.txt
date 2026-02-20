@@ -1,0 +1,1 @@
+tests/custom/tent-3d-globe-zoomed
