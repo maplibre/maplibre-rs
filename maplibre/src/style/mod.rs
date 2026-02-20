@@ -54,10 +54,9 @@ pub struct Style {
 /// Default style for https://openmaptiles.org/schema/
 impl Default for Style {
     fn default() -> Self {
-
-				// ----------------------
-				// Demotiles
-				// ----------------------
+        // ----------------------
+        // Demotiles
+        // ----------------------
 
         // let mut style: Style = serde_json::from_str(include_str!("../../res/demotiles.json"))
         //     .expect("Failed to parse default demotiles.json style");
@@ -69,9 +68,9 @@ impl Default for Style {
 
         // style
 
-				// ----------------------
-				// Use manual styel
-				// ----------------------
+        // ----------------------
+        // Use manual styel
+        // ----------------------
 
         Style {
             version: 8,
