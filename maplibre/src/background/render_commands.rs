@@ -15,16 +15,13 @@ impl<P: PhaseItem> RenderCommand<P> for SetBackgroundPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        println!("SetBackgroundPipeline::render called");
         let Some(Initialized(BackgroundRenderPipeline(pipeline))) = world
             .resources
             .get::<Eventually<BackgroundRenderPipeline>>()
         else {
-            println!("SetBackgroundPipeline::render failed: no pipeline");
             return RenderCommandResult::Failure;
         };
 
-        println!("SetBackgroundPipeline::render success");
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }

@@ -23,9 +23,7 @@ pub fn queue_system(
         ..
     }: &mut MapContext,
 ) -> SystemResult {
-    println!("queue_system: start");
     let Some(mut layer_item_phase) = world.resources.get_mut::<RenderPhase<LayerItem>>() else {
-        println!("queue_system: missing RenderPhase<LayerItem>");
         return Err(SystemError::Dependencies);
     };
 
@@ -73,9 +71,6 @@ pub fn queue_system(
         world.resources.insert(BackgroundBuffers {
             metadata_buffer: buffer,
         });
-        println!("queue_system: successfully inserted BackgroundBuffers");
-    } else {
-        println!("queue_system: metadatas is empty!");
     }
 
     Ok(())
