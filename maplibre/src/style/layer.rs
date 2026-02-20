@@ -224,6 +224,37 @@ pub struct SymbolPaint {
     // TODO a lot
 }
 
+/// Extract the property name from a text-field template string like "{NAME}" → "NAME".
+/// If no braces, returns the string as-is.
+fn extract_text_field_property(template: &str) -> String {
+    let trimmed = template.trim();
+    if trimmed.starts_with('{') && trimmed.ends_with('}') {
+        trimmed[1..trimmed.len() - 1].to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+/// Extract a text-field property name from a layout JSON value.
+/// Handles both:
+///   - `"text-field": "{NAME}"` (constant string)
+///   - `"text-field": {"stops": [[2, "{ABBREV}"], [4, "{NAME}"]]}` (zoom-dependent)
+fn parse_text_field_from_layout(layout: &serde_json::Value) -> Option<String> {
+    let tf = layout.get("text-field")?;
+    if let Some(s) = tf.as_str() {
+        return Some(extract_text_field_property(s));
+    }
+    // Zoom-dependent: use the last stop's value (highest zoom = most detailed)
+    if let Some(stops) = tf.get("stops").and_then(|v| v.as_array()) {
+        if let Some(last_stop) = stops.last() {
+            if let Some(s) = last_stop.get(1).and_then(|v| v.as_str()) {
+                return Some(extract_text_field_property(s));
+            }
+        }
+    }
+    None
+}
+
 /// The different types of paints.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "paint")]
@@ -307,6 +338,7 @@ struct StyleLayerDef {
     #[serde(rename = "source-layer")]
     source_layer: Option<String>,
     paint: Option<serde_json::Value>,
+    layout: Option<serde_json::Value>,
 }
 
 impl<'de> serde::Deserialize<'de> for StyleLayer {
@@ -332,12 +364,25 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
                 "raster" => serde_json::from_value(p.clone())
                     .map(LayerPaint::Raster)
                     .ok(),
-                "symbol" => serde_json::from_value(p.clone())
-                    .map(LayerPaint::Symbol)
-                    .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
-                    .ok(),
+                "symbol" => {
+                    let mut paint: Option<SymbolPaint> =
+                        serde_json::from_value(p.clone())
+                            .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
+                            .ok();
+                    // text-field lives in layout, not paint — merge it in
+                    if let (Some(sp), Some(layout)) = (paint.as_mut(), def.layout.as_ref()) {
+                        if sp.text_field.is_none() {
+                            sp.text_field = parse_text_field_from_layout(layout);
+                        }
+                    }
+                    paint.map(LayerPaint::Symbol)
+                }
                 _ => None,
             }
+        } else if def.type_ == "symbol" {
+            // Symbol layers may have no paint but still have layout with text-field
+            let text_field = def.layout.as_ref().and_then(parse_text_field_from_layout);
+            Some(LayerPaint::Symbol(SymbolPaint { text_field }))
         } else {
             None
         };
@@ -428,5 +473,71 @@ mod tests {
 
         let color = prop.evaluate(&feature_properties).unwrap();
         assert_eq!(color.to_rgba8(), [1, 2, 3, 255]);
+    }
+
+    #[test]
+    fn test_symbol_text_field_from_layout() {
+        let json = r#"{
+            "id": "countries-label",
+            "type": "symbol",
+            "paint": {
+                "text-color": "rgba(8, 37, 77, 1)"
+            },
+            "layout": {
+                "text-field": "{NAME}",
+                "text-font": ["Open Sans Semibold"]
+            },
+            "source": "maplibre",
+            "source-layer": "centroids"
+        }"#;
+        let layer: StyleLayer = serde_json::from_str(json).unwrap();
+        assert_eq!(layer.type_, "symbol");
+        match &layer.paint {
+            Some(LayerPaint::Symbol(sp)) => {
+                assert_eq!(sp.text_field.as_deref(), Some("NAME"));
+            }
+            other => panic!("expected Symbol paint, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_symbol_text_field_zoom_dependent() {
+        let json = r#"{
+            "id": "test-label",
+            "type": "symbol",
+            "paint": {},
+            "layout": {
+                "text-field": {"stops": [[2, "{ABBREV}"], [4, "{NAME}"]]}
+            },
+            "source": "maplibre",
+            "source-layer": "centroids"
+        }"#;
+        let layer: StyleLayer = serde_json::from_str(json).unwrap();
+        match &layer.paint {
+            Some(LayerPaint::Symbol(sp)) => {
+                // Should pick the last stop (highest zoom) → NAME
+                assert_eq!(sp.text_field.as_deref(), Some("NAME"));
+            }
+            other => panic!("expected Symbol paint, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_demotiles_symbol_layers_have_text_field() {
+        let style: crate::style::Style = Default::default();
+        for layer in &style.layers {
+            if layer.type_ == "symbol" {
+                match &layer.paint {
+                    Some(LayerPaint::Symbol(sp)) => {
+                        assert!(
+                            sp.text_field.is_some(),
+                            "symbol layer '{}' should have text_field parsed from layout",
+                            layer.id
+                        );
+                    }
+                    _ => panic!("symbol layer '{}' has no Symbol paint", layer.id),
+                }
+            }
+        }
     }
 }
