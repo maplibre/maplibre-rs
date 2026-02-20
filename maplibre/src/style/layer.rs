@@ -375,29 +375,82 @@ impl LayerPaint {
 }
 
 /// Stores all the styles for a specific layer.
-#[derive(Serialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct StyleLayer {
-    #[serde(skip)]
-    pub index: u32, // FIXME: How is this initialized?
-    pub id: String, // todo make sure that ids are unique. Styles with non-unique layer ids must not exist
-    #[serde(rename = "type")]
+    pub index: u32,
+    pub id: String,
     pub type_: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub filter: Option<serde_json::Value>,
-    // TODO layout
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub maxzoom: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub minzoom: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<HashMap<String, String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(flatten)]
     pub paint: Option<LayerPaint>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_layer: Option<String>,
+}
+
+impl Serialize for StyleLayer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        // Count non-None optional fields
+        let mut count = 2; // id + type are always present
+        if self.filter.is_some() {
+            count += 1;
+        }
+        if self.maxzoom.is_some() {
+            count += 1;
+        }
+        if self.minzoom.is_some() {
+            count += 1;
+        }
+        if self.metadata.is_some() {
+            count += 1;
+        }
+        if self.paint.is_some() {
+            count += 1;
+        }
+        if self.source.is_some() {
+            count += 1;
+        }
+        if self.source_layer.is_some() {
+            count += 1;
+        }
+        let mut map = serializer.serialize_map(Some(count))?;
+        map.serialize_entry("id", &self.id)?;
+        map.serialize_entry("type", &self.type_)?;
+        if let Some(ref filter) = self.filter {
+            map.serialize_entry("filter", filter)?;
+        }
+        if let Some(ref maxzoom) = self.maxzoom {
+            map.serialize_entry("maxzoom", maxzoom)?;
+        }
+        if let Some(ref minzoom) = self.minzoom {
+            map.serialize_entry("minzoom", minzoom)?;
+        }
+        if let Some(ref metadata) = self.metadata {
+            map.serialize_entry("metadata", metadata)?;
+        }
+        if let Some(ref paint) = self.paint {
+            // Serialize just the inner paint data (without the LayerPaint tag)
+            match paint {
+                LayerPaint::Background(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Line(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Fill(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Raster(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Symbol(p) => map.serialize_entry("paint", p)?,
+            }
+        }
+        if let Some(ref source) = self.source {
+            map.serialize_entry("source", source)?;
+        }
+        if let Some(ref source_layer) = self.source_layer {
+            map.serialize_entry("source-layer", source_layer)?;
+        }
+        map.end()
+    }
 }
 
 #[derive(Deserialize)]

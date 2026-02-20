@@ -321,4 +321,17 @@ mod tests {
 
         let _style: Style = serde_json::from_str(style_json_str).unwrap();
     }
+
+    #[test]
+    fn test_style_roundtrip_serde() {
+        // Test that the default style can serialize and deserialize (required for web worker Input)
+        let style = Style::default();
+        let json = serde_json::to_string(&style).unwrap();
+        let roundtripped: Style = serde_json::from_str(&json).unwrap();
+        assert_eq!(style.layers.len(), roundtripped.layers.len());
+        for (orig, rt) in style.layers.iter().zip(roundtripped.layers.iter()) {
+            assert_eq!(orig.id, rt.id, "layer ids must match after round-trip");
+            assert_eq!(orig.type_, rt.type_, "layer types must match after round-trip for {}", orig.id);
+        }
+    }
 }

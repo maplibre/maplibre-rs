@@ -25,6 +25,7 @@ table FlatSymbolLayerTessellated {
     new_vertices: [FlatSymbolVertexNew];
     new_indices: [uint];
     new_usable_indices: uint;
+    style_layer_id: string;
 }
 
 root_type FlatSymbolLayerTessellated;
