@@ -23,6 +23,24 @@ impl Default for TileAddressingScheme {
     }
 }
 
+/// GeoJSON data — either an inline JSON value or a URL pointing to a GeoJSON file.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum GeoJsonData {
+    Url(String),
+    Inline(serde_json::Value),
+}
+
+/// Source properties for a GeoJSON source.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GeoJsonSource {
+    pub data: GeoJsonData,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<u8>,
+}
+
 /// Source properties for tiles or rasters.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct VectorSource {
@@ -56,4 +74,6 @@ pub enum Source {
     Vector(VectorSource),
     #[serde(rename = "raster")]
     Raster(VectorSource), // FIXME: Does it make sense that a raster have a VectorSource?
+    #[serde(rename = "geojson")]
+    GeoJson(GeoJsonSource),
 }

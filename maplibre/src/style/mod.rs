@@ -18,8 +18,11 @@ pub mod source;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Style {
     pub version: u16,
-    pub name: String,
-    pub metadata: HashMap<String, String>,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub metadata: HashMap<String, serde_json::Value>,
+    #[serde(default)]
     pub sources: HashMap<String, Source>,
     pub layers: Vec<StyleLayer>,
     pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
@@ -32,7 +35,7 @@ impl Default for Style {
     fn default() -> Self {
         Style {
             version: 8,
-            name: "Default Style".to_string(),
+            name: Some("Default Style".to_string()),
             metadata: Default::default(),
             sources: Default::default(),
             center: Some([50.85045, 4.34878]),

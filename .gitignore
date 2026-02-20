@@ -14,6 +14,8 @@ Cargo.lock
 
 dist/
 
+maplibre-gl-js/
+
 # Cache by reqwest-middleware-cache
 *reqwest*cache*
 *maplibre*cache*

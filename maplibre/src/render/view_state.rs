@@ -178,42 +178,17 @@ impl ViewState {
         let camera_matrix = self.camera.calc_matrix(camera_to_center_distance);
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
-        let far_z = self.furthest_distance(camera_to_center_distance, center_offset) * 1.01;
+        let furthest = self.furthest_distance(camera_to_center_distance, center_offset);
+        let far_z = furthest * 1.01;
 
-        // The larger the value of near_z is
-        // - the more depth precision is available for features (good)
-        // - clipping starts appearing sooner when the camera is close to 3d features (bad)
-        //
-        // Smaller values worked well for mapbox-gl-js but deckgl was encountering precision issues
-        // when rendering it's layers using custom layers. This value was experimentally chosen and
-        // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
-        //
-        // TODO remove: In fill.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
-        // This means that regardless of the `znear` value all layers will be rendered as part
-        // of the near plane.
-        // These values have been selected experimentally:
-        // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
         let near_z = height / 50.0;
 
         let perspective =
             self.perspective
                 .calc_matrix_with_center(width, height, near_z, far_z, center_offset);
 
-        //let mut perspective = self.perspective.calc_matrix(width / height, near_z, far_z);
-        // Apply center of perspective offset, in order to move the vanishing point
-        //perspective.z[0] = -center_offset.x * 2.0 / width;
-        //perspective.z[1] = center_offset.y * 2.0 / height;
-
         // Apply camera and move camera away from ground
         let view_projection = perspective * camera_matrix;
-
-        // TODO for the below TODOs, check GitHub blame to get an idea of what these matrices are used for!
-        // TODO mercatorMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L725-L727
-        // TODO scale vertically to meters per pixel (inverse of ground resolution): https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L729-L730
-        // TODO alignedProjMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L735-L747
-        // TODO labelPlaneMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L749-L752C14
-        // TODO glCoordMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L754-L758
-        // TODO pixelMatrix, pixelMatrixInverse https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L760-L761
 
         ViewProjection(FLIP_Y * OPENGL_TO_WGPU_MATRIX * view_projection)
     }

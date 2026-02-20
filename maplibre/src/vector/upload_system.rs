@@ -87,11 +87,13 @@ fn upload_tessellated_layer(
 
         for style_layer in &style.layers {
             let layer_id = &style_layer.id;
+            // GeoJSON sources have no source_layer; fall back to the layer id as a
+            // virtual source-layer name (matches the name set in process_geojson_features).
             let source_layer = match style_layer.source_layer.as_ref() {
-                Some(layer) => layer,
+                Some(layer) => layer.as_str(),
                 None => {
-                    log::trace!("style layer {layer_id} does not have a source layer");
-                    continue;
+                    log::trace!("style layer {layer_id} has no source_layer, using id as virtual source layer");
+                    style_layer.id.as_str()
                 }
             };
 
@@ -102,7 +104,7 @@ fn upload_tessellated_layer(
                 ..
             }) = available_layers
                 .iter()
-                .find(|layer| source_layer.as_str() == layer.source_layer)
+                .find(|layer| source_layer == layer.source_layer)
             else {
                 continue;
             };
@@ -113,9 +115,10 @@ fn upload_tessellated_layer(
                 .and_then(|paint| paint.get_color())
                 .map(|color| color.into());
 
-            // Assign every feature in the layer the color from the style
+            // Assign every feature in the layer the color from the style.
+            // Default fill color per MapLibre style spec is black (#000000).
             let feature_metadata = iter::repeat(FillShaderFeatureMetadata {
-                color: color.unwrap(),
+                color: color.unwrap_or([0.0, 0.0, 0.0, 1.0]),
             })
             .take(feature_indices.iter().sum::<u32>() as usize)
             .collect::<Vec<_>>();

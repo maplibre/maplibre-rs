@@ -1,1 +1,1 @@
-tests/line-gradient/color-interpolation-transparent
+tests/circle-geometry/point
