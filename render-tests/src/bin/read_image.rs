@@ -1,7 +1,9 @@
+use std::{
+    collections::{HashMap, HashSet},
+    env,
+};
+
 use image::GenericImageView;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::env;
 
 fn count_colors(img: &image::DynamicImage) {
     let mut counts: std::collections::HashMap<_, usize> = std::collections::HashMap::new();

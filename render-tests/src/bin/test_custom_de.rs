@@ -1,8 +1,6 @@
-use maplibre::style::layer::LayerPaint;
 use maplibre::style::layer::{
-    BackgroundPaint, FillPaint, LinePaint, RasterPaint, StyleLayer, SymbolPaint,
+    BackgroundPaint, FillPaint, LayerPaint, LinePaint, RasterPaint, StyleLayer, SymbolPaint,
 };
-use serde::Deserialize;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 

@@ -1,3 +1,5 @@
+use wgpu::util::DeviceExt;
+
 use crate::{
     context::MapContext,
     render::{
@@ -7,7 +9,6 @@ use crate::{
     style::layer::LayerPaint,
     tcs::system::{SystemError, SystemResult},
 };
-use wgpu::util::DeviceExt;
 
 pub struct BackgroundBuffers {
     pub metadata_buffer: wgpu::Buffer,

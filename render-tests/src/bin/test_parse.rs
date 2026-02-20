@@ -1,5 +1,4 @@
-use maplibre::style::layer::StyleLayer;
-use maplibre::style::Style;
+use maplibre::style::{layer::StyleLayer, Style};
 use serde_json::Value;
 
 fn main() {
