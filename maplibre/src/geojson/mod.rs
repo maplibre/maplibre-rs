@@ -67,7 +67,19 @@ impl<T> ProjectingTessellator<T> {
 
 impl<T: GeomProcessor> GeomProcessor for ProjectingTessellator<T> {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
+        if x.is_nan() || y.is_nan() {
+            println!(
+                "ProjectingTessellator received NaN Input! x={}, y={}, idx={}",
+                x, y, idx
+            );
+        }
         let (tx, ty) = self.project(x, y);
+        if !tx.is_finite() || !ty.is_finite() {
+            println!(
+                "ProjectingTessellator output non-finite! lon={}, lat={} -> tx={}, ty={}",
+                x, y, tx, ty
+            );
+        }
         self.inner.xy(tx, ty, idx)
     }
 
