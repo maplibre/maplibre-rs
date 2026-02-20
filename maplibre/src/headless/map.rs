@@ -92,6 +92,7 @@ impl HeadlessMap {
                             source_layer: layer.layer_data.name,
                             buffer: layer.buffer,
                             feature_indices: layer.feature_indices,
+                            feature_colors: layer.feature_colors,
                         })
                     })
                     .collect::<Vec<_>>(),

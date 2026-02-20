@@ -1,7 +1,5 @@
 //! Uploads data to the GPU which is needed for rendering.
 
-use std::iter;
-
 use crate::{
     context::MapContext,
     coords::ViewRegion,
@@ -100,6 +98,7 @@ fn upload_tessellated_layer(
             let Some(AvailableVectorLayerBucket {
                 coords,
                 feature_indices,
+                feature_colors,
                 buffer,
                 ..
             }) = available_layers
@@ -115,13 +114,19 @@ fn upload_tessellated_layer(
                 .and_then(|paint| paint.get_color())
                 .map(|color| color.into());
 
-            // Assign every feature in the layer the color from the style.
-            // Default fill color per MapLibre style spec is black (#000000).
-            let feature_metadata = iter::repeat(FillShaderFeatureMetadata {
-                color: color.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-            })
-            .take(feature_indices.iter().sum::<u32>() as usize)
-            .collect::<Vec<_>>();
+            // Assign every feature in the layer the color from the style if no parsed feature_color exist.
+            let fallback_color = color.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+
+            let mut feature_metadata =
+                Vec::with_capacity(feature_indices.iter().sum::<u32>() as usize);
+            for (idx, &count) in feature_indices.iter().enumerate() {
+                let current_color = feature_colors.get(idx).copied().unwrap_or(fallback_color);
+                for _ in 0..count {
+                    feature_metadata.push(FillShaderFeatureMetadata {
+                        color: current_color,
+                    });
+                }
+            }
 
             // FIXME avoid uploading empty indices
             if buffer.buffer.indices.is_empty() {

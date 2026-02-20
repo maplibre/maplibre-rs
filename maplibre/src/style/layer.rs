@@ -7,28 +7,150 @@ use std::{
 
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum StyleProperty<T> {
+    Constant(T),
+    Expression(serde_json::Value),
+}
+
+impl<T: std::str::FromStr + Clone> StyleProperty<T> {
+    pub fn evaluate(&self, feature_properties: &HashMap<String, String>) -> Option<T> {
+        match self {
+            StyleProperty::Constant(value) => Some(value.clone()),
+            StyleProperty::Expression(expr) => {
+                if let Some(arr) = expr.as_array() {
+                    if let Some(op) = arr.get(0).and_then(|v| v.as_str()) {
+                        if op == "match" && arr.len() > 3 {
+                            // Extract the getter ["get", "ADM0_A3"]
+                            if let Some(get_arr) = arr.get(1).and_then(|v| v.as_array()) {
+                                if get_arr.get(0).and_then(|v| v.as_str()) == Some("get") {
+                                    if let Some(prop_name) = get_arr.get(1).and_then(|v| v.as_str())
+                                    {
+                                        // Retrieve from feature context
+                                        if let Some(feature_val) = feature_properties.get(prop_name)
+                                        {
+                                            // Search the match array pairs
+                                            let mut i = 2;
+                                            while i < arr.len() - 1 {
+                                                if let Some(match_keys) =
+                                                    arr.get(i).and_then(|v| v.as_array())
+                                                {
+                                                    // Does this feature_val exist in the match keys?
+                                                    let matches = match_keys.iter().any(|k| {
+                                                        k.as_str() == Some(feature_val.as_str())
+                                                    });
+                                                    if matches {
+                                                        if let Some(color_str) =
+                                                            arr.get(i + 1).and_then(|v| v.as_str())
+                                                        {
+                                                            return color_str.parse::<T>().ok();
+                                                        }
+                                                    }
+                                                }
+                                                i += 2;
+                                            }
+                                            // Fallback default index
+                                            if i == arr.len() - 1 {
+                                                if let Some(fallback_clor) =
+                                                    arr.get(i).and_then(|v| v.as_str())
+                                                {
+                                                    return fallback_clor.parse::<T>().ok();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                None
+            }
+        }
+    }
+
+    pub fn deserialize_color_or_none<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<StyleProperty<T>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // For Color types, allow either a raw color string, or an expression value.
+        let v = serde_json::Value::deserialize(deserializer).map_err(serde::de::Error::custom)?;
+        if let Some(s) = v.as_str() {
+            if let Ok(color) = s.parse::<T>() {
+                return Ok(Some(StyleProperty::Constant(color)));
+            }
+        }
+        // If it's a structural generic expression like match arrays
+        if v.is_array() {
+            return Ok(Some(StyleProperty::Expression(v)));
+        }
+        Ok(None)
+    }
+}
+
+impl StyleProperty<f32> {
+    pub fn deserialize_f32_or_none<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<StyleProperty<f32>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v = serde_json::Value::deserialize(deserializer).map_err(serde::de::Error::custom)?;
+        if let Some(f) = v.as_f64() {
+            return Ok(Some(StyleProperty::Constant(f as f32)));
+        }
+        if v.is_array() {
+            return Ok(Some(StyleProperty::Expression(v)));
+        }
+        Ok(None)
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<Color>::deserialize_color_or_none"
+    )]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub background_color: Option<Color>,
+    pub background_color: Option<StyleProperty<Color>>,
     // TODO a lot
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FillPaint {
     #[serde(rename = "fill-color")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<Color>::deserialize_color_or_none"
+    )]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_color: Option<Color>,
+    pub fill_color: Option<StyleProperty<Color>>,
     // TODO a lot
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LinePaint {
-    #[serde(rename = "line-color", skip_serializing_if = "Option::is_none")]
-    pub line_color: Option<Color>,
+    #[serde(rename = "line-color")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<Color>::deserialize_color_or_none"
+    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_color: Option<StyleProperty<Color>>,
+
+    #[serde(rename = "line-width")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<f32>::deserialize_f32_or_none"
+    )]
+    pub line_width: Option<StyleProperty<f32>>,
     // TODO a lot
 }
 
@@ -111,12 +233,27 @@ pub enum LayerPaint {
 impl LayerPaint {
     pub fn get_color(&self) -> Option<Alpha<EncodedSrgb<f32>>> {
         match self {
-            LayerPaint::Background(paint) => paint
-                .background_color
-                .as_ref()
-                .map(|color| color.clone().into()),
-            LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
-            LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Background(paint) => paint.background_color.as_ref().map(|property| {
+                if let StyleProperty::Constant(color) = property {
+                    color.clone().into()
+                } else {
+                    Color::new(1., 1., 1., 1.).into()
+                }
+            }),
+            LayerPaint::Line(paint) => paint.line_color.as_ref().map(|property| {
+                if let StyleProperty::Constant(color) = property {
+                    color.clone().into()
+                } else {
+                    Color::new(1., 1., 1., 1.).into()
+                }
+            }),
+            LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|property| {
+                if let StyleProperty::Constant(color) = property {
+                    color.clone().into()
+                } else {
+                    Color::new(1., 1., 1., 1.).into()
+                }
+            }),
             LayerPaint::Raster(_) => None,
             LayerPaint::Symbol(_) => None,
         }
@@ -157,6 +294,7 @@ struct StyleLayerDef {
     minzoom: Option<u8>,
     metadata: Option<HashMap<String, String>>,
     source: Option<String>,
+    #[serde(rename = "source-layer")]
     source_layer: Option<String>,
     paint: Option<serde_json::Value>,
 }
@@ -170,11 +308,24 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
 
         let paint = if let Some(p) = def.paint {
             match def.type_.as_str() {
-                "background" => serde_json::from_value(p).map(LayerPaint::Background).ok(),
-                "line" => serde_json::from_value(p).map(LayerPaint::Line).ok(),
-                "fill" => serde_json::from_value(p).map(LayerPaint::Fill).ok(),
-                "raster" => serde_json::from_value(p).map(LayerPaint::Raster).ok(),
-                "symbol" => serde_json::from_value(p).map(LayerPaint::Symbol).ok(),
+                "background" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Background)
+                    .ok(),
+                "line" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Line)
+                    .map_err(|e| log::error!("line paint failed {}: {:?}", def.id, e))
+                    .ok(),
+                "fill" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Fill)
+                    .map_err(|e| log::error!("fill paint failed {}: {:?}", def.id, e))
+                    .ok(),
+                "raster" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Raster)
+                    .ok(),
+                "symbol" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Symbol)
+                    .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
+                    .ok(),
                 _ => None,
             }
         } else {

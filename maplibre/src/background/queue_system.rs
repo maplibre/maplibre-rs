@@ -34,11 +34,10 @@ pub fn queue_system(
     // We just iterate through the style layers and issue a single quad draw for each background layer.
     for layer in &style.layers {
         if layer.type_ == "background" {
-            let c = match &layer.paint {
-                Some(LayerPaint::Background(paint)) => paint
-                    .background_color
-                    .as_ref()
-                    .map(|c| c.to_array())
+            let c: [f32; 4] = match &layer.paint {
+                Some(paint @ LayerPaint::Background(_)) => paint
+                    .get_color()
+                    .map(|c| c.into())
                     .unwrap_or([0.0, 0.0, 0.0, 1.0]),
                 _ => [0.0, 0.0, 0.0, 1.0],
             };

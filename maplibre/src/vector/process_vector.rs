@@ -67,6 +67,18 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                 match paint {
                     LayerPaint::Line(_) | LayerPaint::Fill(_) => {
                         let mut tessellator = ZeroTessellator::<IndexDataType>::default();
+                        match paint {
+                            LayerPaint::Fill(p) => {
+                                tessellator.style_property = p.fill_color.clone()
+                            }
+                            LayerPaint::Line(p) => {
+                                tessellator.style_property = p.line_color.clone()
+                            }
+                            LayerPaint::Background(p) => {
+                                tessellator.style_property = p.background_color.clone()
+                            }
+                            _ => {}
+                        }
 
                         if let Err(e) = layer.process(&mut tessellator) {
                             context.layer_missing(coords, &source_layer)?;
@@ -77,6 +89,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 coords,
                                 tessellator.buffer.into(),
                                 tessellator.feature_indices,
+                                tessellator.feature_colors,
                                 original_layer,
                             )?;
                         }
@@ -191,6 +204,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: tile::Layer,
     ) -> Result<(), ProcessVectorError> {
         self.context
@@ -198,6 +212,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
                 *coords,
                 buffer,
                 feature_indices,
+                feature_colors,
                 layer_data,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))

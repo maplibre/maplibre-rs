@@ -65,6 +65,7 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
     ) -> Self
     where
@@ -187,6 +188,7 @@ pub struct DefaultLayerTessellated {
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
+    pub feature_colors: Vec<[f32; 4]>,
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
 
@@ -211,12 +213,14 @@ impl LayerTessellated for DefaultLayerTessellated {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
     ) -> Self {
         Self {
             coords,
             buffer,
             feature_indices,
+            feature_colors,
             layer_data,
         }
     }
@@ -235,6 +239,7 @@ impl LayerTessellated for DefaultLayerTessellated {
             source_layer: self.layer_data.name,
             buffer: self.buffer,
             feature_indices: self.feature_indices,
+            feature_colors: self.feature_colors,
         }
     }
 }

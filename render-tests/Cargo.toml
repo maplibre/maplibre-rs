@@ -23,3 +23,4 @@ log.workspace = true
 env_logger.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 walkdir.workspace = true
+serde = { workspace = true, features = ["derive"] }

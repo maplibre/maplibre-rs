@@ -124,6 +124,7 @@ pub struct AvailableVectorLayerBucket {
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
+    pub feature_colors: Vec<[f32; 4]>,
 }
 
 pub struct MissingVectorLayerBucket {
