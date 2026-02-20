@@ -49,6 +49,7 @@ pub fn queue_system(
                 draw_function: Box::new(DrawState::<LayerItem, DrawBackground>::new())
                     as Box<dyn crate::render::render_phase::Draw<LayerItem>>,
                 index: layer.index,
+                is_line: false,
                 style_layer: layer.id.clone(),
                 source_shape: crate::render::tile_view_pattern::TileShape::default(),
 

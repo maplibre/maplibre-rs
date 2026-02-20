@@ -287,6 +287,12 @@ impl Shader for LineShader {
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 10,
                         },
+                        // line_width
+                        wgpu::VertexAttribute {
+                            offset: wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 13,
+                        },
                     ],
                 },
                 // features
@@ -404,6 +410,7 @@ pub struct SDFShaderFeatureMetadata {
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderLayerMetadata {
     pub z_index: f32,
+    pub line_width: f32,
 }
 
 #[repr(C)]

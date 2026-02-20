@@ -117,7 +117,58 @@ impl StyleProperty<f32> {
         if v.is_array() {
             return Ok(Some(StyleProperty::Expression(v)));
         }
+        // Handle {"stops": [[zoom, value], ...]} format
+        if v.is_object() {
+            return Ok(Some(StyleProperty::Expression(v)));
+        }
         Ok(None)
+    }
+
+    /// Evaluate a zoom-dependent f32 property at the given zoom level.
+    /// Supports constants and `{"stops": [[z0, v0], [z1, v1], ...]}`.
+    pub fn evaluate_at_zoom(&self, zoom: f32) -> f32 {
+        match self {
+            StyleProperty::Constant(v) => *v,
+            StyleProperty::Expression(expr) => {
+                let stops = expr
+                    .get("stops")
+                    .and_then(|s| s.as_array())
+                    .or_else(|| expr.as_array());
+                let Some(stops) = stops else {
+                    return 1.0;
+                };
+                // Parse stops as [(zoom, value), ...]
+                let parsed: Vec<(f32, f32)> = stops
+                    .iter()
+                    .filter_map(|stop| {
+                        let arr = stop.as_array()?;
+                        let z = arr.first()?.as_f64()? as f32;
+                        let v = arr.get(1)?.as_f64()? as f32;
+                        Some((z, v))
+                    })
+                    .collect();
+
+                if parsed.is_empty() {
+                    return 1.0;
+                }
+                if zoom <= parsed[0].0 {
+                    return parsed[0].1;
+                }
+                if zoom >= parsed[parsed.len() - 1].0 {
+                    return parsed[parsed.len() - 1].1;
+                }
+                // Linear interpolation between stops
+                for window in parsed.windows(2) {
+                    let (z0, v0) = window[0];
+                    let (z1, v1) = window[1];
+                    if zoom >= z0 && zoom <= z1 {
+                        let t = (zoom - z0) / (z1 - z0);
+                        return v0 + t * (v1 - v0);
+                    }
+                }
+                parsed[parsed.len() - 1].1
+            }
+        }
     }
 }
 

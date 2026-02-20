@@ -128,6 +128,7 @@ fn upload_symbol_layer(
                 buffer,
                 ShaderLayerMetadata {
                     z_index: style_layer.index as f32,
+                    line_width: 0.0,
                 },
                 &feature_metadata,
             );

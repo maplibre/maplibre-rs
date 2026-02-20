@@ -61,6 +61,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
                     layer_item_phase.add(LayerItem {
                         draw_function,
                         index: layer_entry.style_layer.index,
+                        is_line,
                         style_layer: layer_entry.style_layer.id.clone(),
                         tile: Tile {
                             coords: layer_entry.coords,

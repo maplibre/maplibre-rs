@@ -10,7 +10,7 @@ use crate::{
         view_state::ViewStatePadding,
         Renderer,
     },
-    style::Style,
+    style::{layer::LayerPaint, Style},
     tcs::{
         system::{SystemError, SystemResult},
         tiles::Tiles,
@@ -41,6 +41,8 @@ pub fn upload_system(
         ViewStatePadding::Loose,
     );
 
+    let zoom = view_state.zoom().level();
+
     if let Some(view_region) = &view_region {
         upload_tessellated_layer(
             buffer_pool,
@@ -49,6 +51,7 @@ pub fn upload_system(
             &mut world.tiles,
             style,
             view_region,
+            zoom,
         );
     }
 
@@ -62,6 +65,7 @@ fn upload_tessellated_layer(
     tiles: &mut Tiles,
     style: &Style,
     view_region: &ViewRegion,
+    zoom: f32,
 ) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
@@ -133,6 +137,16 @@ fn upload_tessellated_layer(
                 continue;
             }
 
+            // Extract line-width from style paint (default 1.0px)
+            let line_width = match &style_layer.paint {
+                Some(LayerPaint::Line(paint)) => paint
+                    .line_width
+                    .as_ref()
+                    .map(|w| w.evaluate_at_zoom(zoom))
+                    .unwrap_or(1.0),
+                _ => 1.0,
+            };
+
             log::debug!("Allocating geometry at {coords}");
             buffer_pool.allocate_layer_geometry(
                 queue,
@@ -141,6 +155,7 @@ fn upload_tessellated_layer(
                 buffer,
                 ShaderLayerMetadata {
                     z_index: style_layer.index as f32,
+                    line_width,
                 },
                 &feature_metadata,
             );

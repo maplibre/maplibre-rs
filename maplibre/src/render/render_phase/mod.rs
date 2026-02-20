@@ -49,6 +49,8 @@ impl<I: PhaseItem> RenderPhase<I> {
 pub struct LayerItem {
     pub draw_function: Box<dyn Draw<LayerItem>>,
     pub index: u32,
+    /// Whether this item uses the line pipeline (true) or fill pipeline (false).
+    pub is_line: bool,
 
     pub style_layer: String,
 

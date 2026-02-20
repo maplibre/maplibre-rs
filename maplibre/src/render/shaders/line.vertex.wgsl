@@ -30,8 +30,9 @@ fn main(
     @location(10) z_index: f32,
     @location(11) viewport_width: f32,
     @location(12) viewport_height: f32,
+    @location(13) line_width: f32,
 ) -> VertexOutput {
-    let line_width_px = 2.0;
+    let line_width_px = line_width;
     let blur = 0.0;
     let gapwidth = 0.0;
 

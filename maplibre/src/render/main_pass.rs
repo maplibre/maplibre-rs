@@ -115,6 +115,11 @@ impl Node for MainPassNode {
 
         if let Some(layer_items) = world.resources.get::<RenderPhase<LayerItem>>() {
             log::trace!("RenderPhase<LayerItem>::size() = {}", layer_items.size());
+
+            // Draw layers in style index order (painter's algorithm).
+            // This preserves the MapLibre GL JS rendering model where e.g.
+            // coastline (line) → countries-fill (fill) → countries-boundary (line)
+            // ensures fill covers inland portions of coastline.
             for item in layer_items {
                 item.draw_function.draw(&mut tracked_pass, world, item);
             }

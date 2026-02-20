@@ -36,6 +36,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
                 LayerItem {
                     draw_function: Box::new(DrawState::<LayerItem, DrawRasterTiles>::new()),
                     index: 0,
+                    is_line: false,
                     style_layer: "raster".to_string(),
                     tile: Tile {
                         coords: source_shape.coords(),

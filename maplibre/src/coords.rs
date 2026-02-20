@@ -201,6 +201,10 @@ impl Zoom {
     pub fn new(zoom: f64) -> Self {
         Zoom(zoom)
     }
+
+    pub fn level(&self) -> f32 {
+        self.0 as f32
+    }
 }
 
 impl Zoom {
