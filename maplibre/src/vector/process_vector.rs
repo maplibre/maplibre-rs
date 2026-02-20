@@ -1,4 +1,8 @@
-use std::{borrow::Cow, collections::HashMap, collections::HashSet, marker::PhantomData};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+    marker::PhantomData,
+};
 
 use geozero::{
     mvt::{tile, Message},

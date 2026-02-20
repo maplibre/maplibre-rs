@@ -1,7 +1,6 @@
 //! Tessellation for lines and polygons is implemented here.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 
 use bytemuck::Pod;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
