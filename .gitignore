@@ -15,6 +15,9 @@ Cargo.lock
 dist/
 
 maplibre-gl-js/
+render-tests/**/diff.png
+render-tests/**/actual.png
+maplibre-native-shaders/
 
 # Cache by reqwest-middleware-cache
 *reqwest*cache*
