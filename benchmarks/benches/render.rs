@@ -12,7 +12,7 @@ use maplibre::{
 fn headless_render(c: &mut Criterion) {
     c.bench_function("headless_render", |b| {
         let (mut map, layer) = run_multithreaded(async {
-            let (kernel, renderer) = create_headless_renderer(1000, None).await;
+            let (kernel, renderer) = create_headless_renderer(1000, 1000, None).await;
             let style = Style::default();
 
             let plugins: Vec<Box<dyn Plugin<_>>> = vec![
