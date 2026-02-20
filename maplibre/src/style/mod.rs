@@ -44,6 +44,21 @@ impl Default for Style {
             layers: vec![
                 StyleLayer {
                     index: 0,
+                    id: "background".to_string(),
+                    type_: "background".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Background(
+                        crate::style::layer::BackgroundPaint {
+                            background_color: Some(Color::from_str("#ffffff").unwrap()),
+                        },
+                    )),
+                    source: None,
+                    source_layer: None,
+                },
+                StyleLayer {
+                    index: 1,
                     id: "park".to_string(),
                     type_: "fill".to_string(),
                     maxzoom: None,

@@ -138,6 +138,7 @@ pub fn run_headed_map<P>(
             renderer_builder,
             vec![
                 Box::new(RenderPlugin::default()),
+                Box::new(maplibre::background::BackgroundPlugin::default()),
                 Box::new(maplibre::vector::VectorPlugin::<
                     maplibre::vector::DefaultVectorTransferables,
                 >::default()),

@@ -38,8 +38,8 @@ fn main(
     // Output raw clip space coordinates (identity mapping)
     var out: VertexOutput;
     
-    // Hardcode z to 0.5 (middle depth) to bypass any depth clipping issues
-    out.position = vec4<f32>(pos, 0.5, 1.0);
+    // We use a small epsilon near 0.0 (the far plane) because wgpu `Greater` won't pass 0.0 > 0.0 
+    out.position = vec4<f32>(pos, 1.0e-5, 1.0);
     out.color = color;
 
     return out;

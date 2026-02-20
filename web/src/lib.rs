@@ -130,6 +130,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         RendererBuilder::new(),
         vec![
             Box::<maplibre::render::RenderPlugin>::default(),
+            Box::<maplibre::background::BackgroundPlugin>::default(),
             Box::<maplibre::vector::VectorPlugin<platform::UsedVectorTransferables>>::default(),
             Box::new(maplibre::sdf::SdfPlugin::<platform::UsedVectorTransferables>::default()),
             // Box::new(RasterPlugin::<platform::UsedRasterTransferables>::default()),
