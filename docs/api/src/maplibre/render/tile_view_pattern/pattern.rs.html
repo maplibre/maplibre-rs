@@ -132,38 +132,39 @@
 <a href=#132 id=132 data-nosnippet>132</a>        <span class="kw">let </span><span class="kw-2">mut </span>add_to_buffer = |shape: <span class="kw-2">&amp;mut </span>TileShape| {
 <a href=#133 id=133 data-nosnippet>133</a>            shape.set_buffer_range(buffer.len() <span class="kw">as </span>u64);
 <a href=#134 id=134 data-nosnippet>134</a>            <span class="comment">// TODO: Name `ShaderTileMetadata` is unfortunate here, because for raster rendering it actually is a layer
-<a href=#135 id=135 data-nosnippet>135</a>            </span>buffer.push(ShaderTileMetadata {
-<a href=#136 id=136 data-nosnippet>136</a>                <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is
-<a href=#137 id=137 data-nosnippet>137</a>                // better supported.
-<a href=#138 id=138 data-nosnippet>138</a>                </span>transform: view_proj
-<a href=#139 id=139 data-nosnippet>139</a>                    .to_model_view_projection(shape.transform)
-<a href=#140 id=140 data-nosnippet>140</a>                    .downcast()
-<a href=#141 id=141 data-nosnippet>141</a>                    .into(), <span class="comment">// TODO: move this calculation to update() fn above
-<a href=#142 id=142 data-nosnippet>142</a>                </span>zoom_factor: shape.zoom_factor <span class="kw">as </span>f32,
-<a href=#143 id=143 data-nosnippet>143</a>            });
-<a href=#144 id=144 data-nosnippet>144</a>        };
-<a href=#145 id=145 data-nosnippet>145</a>
-<a href=#146 id=146 data-nosnippet>146</a>        <span class="kw">for </span>view_tile <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.view_tiles {
-<a href=#147 id=147 data-nosnippet>147</a>            <span class="kw">match </span><span class="kw-2">&amp;mut </span>view_tile.source {
-<a href=#148 id=148 data-nosnippet>148</a>                SourceShapes::Parent(source_shape) =&gt; {
-<a href=#149 id=149 data-nosnippet>149</a>                    add_to_buffer(source_shape);
-<a href=#150 id=150 data-nosnippet>150</a>                }
-<a href=#151 id=151 data-nosnippet>151</a>                SourceShapes::Children(source_shapes) =&gt; {
-<a href=#152 id=152 data-nosnippet>152</a>                    <span class="kw">for </span>source_shape <span class="kw">in </span>source_shapes {
-<a href=#153 id=153 data-nosnippet>153</a>                        add_to_buffer(source_shape);
-<a href=#154 id=154 data-nosnippet>154</a>                    }
-<a href=#155 id=155 data-nosnippet>155</a>                }
-<a href=#156 id=156 data-nosnippet>156</a>                SourceShapes::SourceEqTarget(source_shape) =&gt; add_to_buffer(source_shape),
-<a href=#157 id=157 data-nosnippet>157</a>                SourceShapes::None =&gt; {}
-<a href=#158 id=158 data-nosnippet>158</a>            }
-<a href=#159 id=159 data-nosnippet>159</a>        }
-<a href=#160 id=160 data-nosnippet>160</a>
-<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">let </span>raw_buffer = bytemuck::cast_slice(buffer.as_slice());
-<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">if </span>raw_buffer.len() <span class="kw">as </span>wgpu::BufferAddress &gt; <span class="self">self</span>.view_tiles_buffer.inner_size {
-<a href=#163 id=163 data-nosnippet>163</a>            <span class="comment">/* TODO: We need to avoid this case by either choosing a proper size
-<a href=#164 id=164 data-nosnippet>164</a>            TODO: (DEFAULT_TILE_VIEW_PATTERN_SIZE), or resizing the buffer */
-<a href=#165 id=165 data-nosnippet>165</a>            </span><span class="macro">panic!</span>(<span class="string">"Buffer is too small to store the tile pattern!"</span>);
-<a href=#166 id=166 data-nosnippet>166</a>        }
-<a href=#167 id=167 data-nosnippet>167</a>        queue.write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.view_tiles_buffer.inner, <span class="number">0</span>, raw_buffer);
-<a href=#168 id=168 data-nosnippet>168</a>    }
-<a href=#169 id=169 data-nosnippet>169</a>}</code></pre></div></section></main></body></html>
+<a href=#135 id=135 data-nosnippet>135</a>            </span><span class="kw">let </span>transform = view_proj
+<a href=#136 id=136 data-nosnippet>136</a>                .to_model_view_projection(shape.transform)
+<a href=#137 id=137 data-nosnippet>137</a>                .downcast()
+<a href=#138 id=138 data-nosnippet>138</a>                .into(); <span class="comment">// TODO: move this calculation to update() fn above
+<a href=#139 id=139 data-nosnippet>139</a>            </span>buffer.push(ShaderTileMetadata {
+<a href=#140 id=140 data-nosnippet>140</a>                <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is
+<a href=#141 id=141 data-nosnippet>141</a>                // better supported.
+<a href=#142 id=142 data-nosnippet>142</a>                </span>transform,
+<a href=#143 id=143 data-nosnippet>143</a>                zoom_factor: shape.zoom_factor <span class="kw">as </span>f32,
+<a href=#144 id=144 data-nosnippet>144</a>            });
+<a href=#145 id=145 data-nosnippet>145</a>        };
+<a href=#146 id=146 data-nosnippet>146</a>
+<a href=#147 id=147 data-nosnippet>147</a>        <span class="kw">for </span>view_tile <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.view_tiles {
+<a href=#148 id=148 data-nosnippet>148</a>            <span class="kw">match </span><span class="kw-2">&amp;mut </span>view_tile.source {
+<a href=#149 id=149 data-nosnippet>149</a>                SourceShapes::Parent(source_shape) =&gt; {
+<a href=#150 id=150 data-nosnippet>150</a>                    add_to_buffer(source_shape);
+<a href=#151 id=151 data-nosnippet>151</a>                }
+<a href=#152 id=152 data-nosnippet>152</a>                SourceShapes::Children(source_shapes) =&gt; {
+<a href=#153 id=153 data-nosnippet>153</a>                    <span class="kw">for </span>source_shape <span class="kw">in </span>source_shapes {
+<a href=#154 id=154 data-nosnippet>154</a>                        add_to_buffer(source_shape);
+<a href=#155 id=155 data-nosnippet>155</a>                    }
+<a href=#156 id=156 data-nosnippet>156</a>                }
+<a href=#157 id=157 data-nosnippet>157</a>                SourceShapes::SourceEqTarget(source_shape) =&gt; add_to_buffer(source_shape),
+<a href=#158 id=158 data-nosnippet>158</a>                SourceShapes::None =&gt; {}
+<a href=#159 id=159 data-nosnippet>159</a>            }
+<a href=#160 id=160 data-nosnippet>160</a>        }
+<a href=#161 id=161 data-nosnippet>161</a>
+<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">let </span>raw_buffer = bytemuck::cast_slice(buffer.as_slice());
+<a href=#163 id=163 data-nosnippet>163</a>        <span class="kw">if </span>raw_buffer.len() <span class="kw">as </span>wgpu::BufferAddress &gt; <span class="self">self</span>.view_tiles_buffer.inner_size {
+<a href=#164 id=164 data-nosnippet>164</a>            <span class="comment">/* TODO: We need to avoid this case by either choosing a proper size
+<a href=#165 id=165 data-nosnippet>165</a>            TODO: (DEFAULT_TILE_VIEW_PATTERN_SIZE), or resizing the buffer */
+<a href=#166 id=166 data-nosnippet>166</a>            </span><span class="macro">panic!</span>(<span class="string">"Buffer is too small to store the tile pattern!"</span>);
+<a href=#167 id=167 data-nosnippet>167</a>        }
+<a href=#168 id=168 data-nosnippet>168</a>        queue.write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.view_tiles_buffer.inner, <span class="number">0</span>, raw_buffer);
+<a href=#169 id=169 data-nosnippet>169</a>    }
+<a href=#170 id=170 data-nosnippet>170</a>}</code></pre></div></section></main></body></html>

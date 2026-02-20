@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["LayerPaint","RasterResampling"],"struct":["BackgroundPaint","FillPaint","LinePaint","RasterPaint","StyleLayer","SymbolPaint"]};
+window.SIDEBAR_ITEMS = {"enum":["LayerPaint","RasterResampling"],"struct":["BackgroundPaint","FillPaint","LinePaint","RasterPaint","StyleLayer","StyleLayerDef","SymbolPaint"]};

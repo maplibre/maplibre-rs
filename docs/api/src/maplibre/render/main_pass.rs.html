@@ -55,77 +55,87 @@
 <a href=#55 id=55 data-nosnippet>55</a>            wgpu::RenderPassColorAttachment {
 <a href=#56 id=56 data-nosnippet>56</a>                view: <span class="kw-2">&amp;</span>texture.view,
 <a href=#57 id=57 data-nosnippet>57</a>                ops: wgpu::Operations {
-<a href=#58 id=58 data-nosnippet>58</a>                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-<a href=#59 id=59 data-nosnippet>59</a>                    store: StoreOp::Store,
-<a href=#60 id=60 data-nosnippet>60</a>                },
-<a href=#61 id=61 data-nosnippet>61</a>                resolve_target: <span class="prelude-val">Some</span>(render_target.deref()),
-<a href=#62 id=62 data-nosnippet>62</a>            }
-<a href=#63 id=63 data-nosnippet>63</a>        } <span class="kw">else </span>{
-<a href=#64 id=64 data-nosnippet>64</a>            wgpu::RenderPassColorAttachment {
-<a href=#65 id=65 data-nosnippet>65</a>                view: render_target.deref(),
-<a href=#66 id=66 data-nosnippet>66</a>                ops: wgpu::Operations {
-<a href=#67 id=67 data-nosnippet>67</a>                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-<a href=#68 id=68 data-nosnippet>68</a>                    store: StoreOp::Store,
-<a href=#69 id=69 data-nosnippet>69</a>                },
-<a href=#70 id=70 data-nosnippet>70</a>                resolve_target: <span class="prelude-val">None</span>,
-<a href=#71 id=71 data-nosnippet>71</a>            }
-<a href=#72 id=72 data-nosnippet>72</a>        };
-<a href=#73 id=73 data-nosnippet>73</a>
-<a href=#74 id=74 data-nosnippet>74</a>        <span class="kw">let </span>render_pass =
-<a href=#75 id=75 data-nosnippet>75</a>            render_context
-<a href=#76 id=76 data-nosnippet>76</a>                .command_encoder
-<a href=#77 id=77 data-nosnippet>77</a>                .begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
-<a href=#78 id=78 data-nosnippet>78</a>                    label: <span class="prelude-val">Some</span>(<span class="string">"main_pass"</span>),
-<a href=#79 id=79 data-nosnippet>79</a>                    color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(color_attachment)],
-<a href=#80 id=80 data-nosnippet>80</a>                    depth_stencil_attachment: <span class="prelude-val">Some</span>(wgpu::RenderPassDepthStencilAttachment {
-<a href=#81 id=81 data-nosnippet>81</a>                        view: <span class="kw-2">&amp;</span>depth_texture.view,
-<a href=#82 id=82 data-nosnippet>82</a>                        depth_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
-<a href=#83 id=83 data-nosnippet>83</a>                            load: wgpu::LoadOp::Clear(<span class="number">0.0</span>),
-<a href=#84 id=84 data-nosnippet>84</a>                            store: StoreOp::Store,
-<a href=#85 id=85 data-nosnippet>85</a>                        }),
-<a href=#86 id=86 data-nosnippet>86</a>                        stencil_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
-<a href=#87 id=87 data-nosnippet>87</a>                            load: wgpu::LoadOp::Clear(<span class="number">0</span>),
-<a href=#88 id=88 data-nosnippet>88</a>                            store: StoreOp::Store,
-<a href=#89 id=89 data-nosnippet>89</a>                        }),
-<a href=#90 id=90 data-nosnippet>90</a>                    }),
-<a href=#91 id=91 data-nosnippet>91</a>                    timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#92 id=92 data-nosnippet>92</a>                    occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#93 id=93 data-nosnippet>93</a>                });
-<a href=#94 id=94 data-nosnippet>94</a>
-<a href=#95 id=95 data-nosnippet>95</a>        <span class="kw">let </span><span class="kw-2">mut </span>tracked_pass = TrackedRenderPass::new(render_pass);
-<a href=#96 id=96 data-nosnippet>96</a>
-<a href=#97 id=97 data-nosnippet>97</a>        <span class="comment">// TODO: Automatically raise error when items get linearly too many (+1k)
-<a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(mask_items) = world.resources.get::&lt;RenderPhase&lt;TileMaskItem&gt;&gt;() {
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="macro">log::trace!</span>(<span class="string">"RenderPhase&lt;TileMaskItem&gt;::size() = {}"</span>, mask_items.size());
-<a href=#101 id=101 data-nosnippet>101</a>            <span class="kw">for </span>item <span class="kw">in </span>mask_items {
-<a href=#102 id=102 data-nosnippet>102</a>                item.draw_function.draw(<span class="kw-2">&amp;mut </span>tracked_pass, world, item);
-<a href=#103 id=103 data-nosnippet>103</a>            }
-<a href=#104 id=104 data-nosnippet>104</a>        }
-<a href=#105 id=105 data-nosnippet>105</a>
-<a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_items) = world.resources.get::&lt;RenderPhase&lt;LayerItem&gt;&gt;() {
-<a href=#107 id=107 data-nosnippet>107</a>            <span class="macro">log::trace!</span>(<span class="string">"RenderPhase&lt;LayerItem&gt;::size() = {}"</span>, layer_items.size());
-<a href=#108 id=108 data-nosnippet>108</a>            <span class="kw">for </span>item <span class="kw">in </span>layer_items {
-<a href=#109 id=109 data-nosnippet>109</a>                item.draw_function.draw(<span class="kw-2">&amp;mut </span>tracked_pass, world, item);
-<a href=#110 id=110 data-nosnippet>110</a>            }
-<a href=#111 id=111 data-nosnippet>111</a>        }
-<a href=#112 id=112 data-nosnippet>112</a>
-<a href=#113 id=113 data-nosnippet>113</a>        <span class="prelude-val">Ok</span>(())
-<a href=#114 id=114 data-nosnippet>114</a>    }
-<a href=#115 id=115 data-nosnippet>115</a>}
-<a href=#116 id=116 data-nosnippet>116</a>
-<a href=#117 id=117 data-nosnippet>117</a><span class="kw">pub struct </span>MainPassDriverNode;
-<a href=#118 id=118 data-nosnippet>118</a>
-<a href=#119 id=119 data-nosnippet>119</a><span class="kw">impl </span>Node <span class="kw">for </span>MainPassDriverNode {
-<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">fn </span>run(
-<a href=#121 id=121 data-nosnippet>121</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#122 id=122 data-nosnippet>122</a>        graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
-<a href=#123 id=123 data-nosnippet>123</a>        _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-<a href=#124 id=124 data-nosnippet>124</a>        _resources: <span class="kw-2">&amp;</span>RenderResources,
-<a href=#125 id=125 data-nosnippet>125</a>        _world: <span class="kw-2">&amp;</span>World,
-<a href=#126 id=126 data-nosnippet>126</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
-<a href=#127 id=127 data-nosnippet>127</a>        graph.run_sub_graph(draw_graph::NAME, <span class="macro">vec!</span>[])<span class="question-mark">?</span>;
+<a href=#58 id=58 data-nosnippet>58</a>                    load: wgpu::LoadOp::Clear(wgpu::Color {
+<a href=#59 id=59 data-nosnippet>59</a>                        r: <span class="number">0.0</span>,
+<a href=#60 id=60 data-nosnippet>60</a>                        g: <span class="number">0.0</span>,
+<a href=#61 id=61 data-nosnippet>61</a>                        b: <span class="number">0.0</span>,
+<a href=#62 id=62 data-nosnippet>62</a>                        a: <span class="number">0.0</span>,
+<a href=#63 id=63 data-nosnippet>63</a>                    }),
+<a href=#64 id=64 data-nosnippet>64</a>                    store: StoreOp::Store,
+<a href=#65 id=65 data-nosnippet>65</a>                },
+<a href=#66 id=66 data-nosnippet>66</a>                resolve_target: <span class="prelude-val">Some</span>(render_target.deref()),
+<a href=#67 id=67 data-nosnippet>67</a>            }
+<a href=#68 id=68 data-nosnippet>68</a>        } <span class="kw">else </span>{
+<a href=#69 id=69 data-nosnippet>69</a>            wgpu::RenderPassColorAttachment {
+<a href=#70 id=70 data-nosnippet>70</a>                view: render_target.deref(),
+<a href=#71 id=71 data-nosnippet>71</a>                ops: wgpu::Operations {
+<a href=#72 id=72 data-nosnippet>72</a>                    load: wgpu::LoadOp::Clear(wgpu::Color {
+<a href=#73 id=73 data-nosnippet>73</a>                        r: <span class="number">0.0</span>,
+<a href=#74 id=74 data-nosnippet>74</a>                        g: <span class="number">0.0</span>,
+<a href=#75 id=75 data-nosnippet>75</a>                        b: <span class="number">0.0</span>,
+<a href=#76 id=76 data-nosnippet>76</a>                        a: <span class="number">0.0</span>,
+<a href=#77 id=77 data-nosnippet>77</a>                    }),
+<a href=#78 id=78 data-nosnippet>78</a>                    store: StoreOp::Store,
+<a href=#79 id=79 data-nosnippet>79</a>                },
+<a href=#80 id=80 data-nosnippet>80</a>                resolve_target: <span class="prelude-val">None</span>,
+<a href=#81 id=81 data-nosnippet>81</a>            }
+<a href=#82 id=82 data-nosnippet>82</a>        };
+<a href=#83 id=83 data-nosnippet>83</a>
+<a href=#84 id=84 data-nosnippet>84</a>        <span class="kw">let </span>render_pass =
+<a href=#85 id=85 data-nosnippet>85</a>            render_context
+<a href=#86 id=86 data-nosnippet>86</a>                .command_encoder
+<a href=#87 id=87 data-nosnippet>87</a>                .begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
+<a href=#88 id=88 data-nosnippet>88</a>                    label: <span class="prelude-val">Some</span>(<span class="string">"main_pass"</span>),
+<a href=#89 id=89 data-nosnippet>89</a>                    color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(color_attachment)],
+<a href=#90 id=90 data-nosnippet>90</a>                    depth_stencil_attachment: <span class="prelude-val">Some</span>(wgpu::RenderPassDepthStencilAttachment {
+<a href=#91 id=91 data-nosnippet>91</a>                        view: <span class="kw-2">&amp;</span>depth_texture.view,
+<a href=#92 id=92 data-nosnippet>92</a>                        depth_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
+<a href=#93 id=93 data-nosnippet>93</a>                            load: wgpu::LoadOp::Clear(<span class="number">0.0</span>),
+<a href=#94 id=94 data-nosnippet>94</a>                            store: StoreOp::Store,
+<a href=#95 id=95 data-nosnippet>95</a>                        }),
+<a href=#96 id=96 data-nosnippet>96</a>                        stencil_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
+<a href=#97 id=97 data-nosnippet>97</a>                            load: wgpu::LoadOp::Clear(<span class="number">0</span>),
+<a href=#98 id=98 data-nosnippet>98</a>                            store: StoreOp::Store,
+<a href=#99 id=99 data-nosnippet>99</a>                        }),
+<a href=#100 id=100 data-nosnippet>100</a>                    }),
+<a href=#101 id=101 data-nosnippet>101</a>                    timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#102 id=102 data-nosnippet>102</a>                    occlusion_query_set: <span class="prelude-val">None</span>,
+<a href=#103 id=103 data-nosnippet>103</a>                });
+<a href=#104 id=104 data-nosnippet>104</a>
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">let </span><span class="kw-2">mut </span>tracked_pass = TrackedRenderPass::new(render_pass);
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>        <span class="comment">// TODO: Automatically raise error when items get linearly too many (+1k)
+<a href=#108 id=108 data-nosnippet>108</a>
+<a href=#109 id=109 data-nosnippet>109</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(mask_items) = world.resources.get::&lt;RenderPhase&lt;TileMaskItem&gt;&gt;() {
+<a href=#110 id=110 data-nosnippet>110</a>            <span class="macro">log::trace!</span>(<span class="string">"RenderPhase&lt;TileMaskItem&gt;::size() = {}"</span>, mask_items.size());
+<a href=#111 id=111 data-nosnippet>111</a>            <span class="kw">for </span>item <span class="kw">in </span>mask_items {
+<a href=#112 id=112 data-nosnippet>112</a>                item.draw_function.draw(<span class="kw-2">&amp;mut </span>tracked_pass, world, item);
+<a href=#113 id=113 data-nosnippet>113</a>            }
+<a href=#114 id=114 data-nosnippet>114</a>        }
+<a href=#115 id=115 data-nosnippet>115</a>
+<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_items) = world.resources.get::&lt;RenderPhase&lt;LayerItem&gt;&gt;() {
+<a href=#117 id=117 data-nosnippet>117</a>            <span class="macro">log::trace!</span>(<span class="string">"RenderPhase&lt;LayerItem&gt;::size() = {}"</span>, layer_items.size());
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="kw">for </span>item <span class="kw">in </span>layer_items {
+<a href=#119 id=119 data-nosnippet>119</a>                item.draw_function.draw(<span class="kw-2">&amp;mut </span>tracked_pass, world, item);
+<a href=#120 id=120 data-nosnippet>120</a>            }
+<a href=#121 id=121 data-nosnippet>121</a>        }
+<a href=#122 id=122 data-nosnippet>122</a>
+<a href=#123 id=123 data-nosnippet>123</a>        <span class="prelude-val">Ok</span>(())
+<a href=#124 id=124 data-nosnippet>124</a>    }
+<a href=#125 id=125 data-nosnippet>125</a>}
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a><span class="kw">pub struct </span>MainPassDriverNode;
 <a href=#128 id=128 data-nosnippet>128</a>
-<a href=#129 id=129 data-nosnippet>129</a>        <span class="prelude-val">Ok</span>(())
-<a href=#130 id=130 data-nosnippet>130</a>    }
-<a href=#131 id=131 data-nosnippet>131</a>}</code></pre></div></section></main></body></html>
+<a href=#129 id=129 data-nosnippet>129</a><span class="kw">impl </span>Node <span class="kw">for </span>MainPassDriverNode {
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">fn </span>run(
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#132 id=132 data-nosnippet>132</a>        graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
+<a href=#133 id=133 data-nosnippet>133</a>        _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
+<a href=#134 id=134 data-nosnippet>134</a>        _resources: <span class="kw-2">&amp;</span>RenderResources,
+<a href=#135 id=135 data-nosnippet>135</a>        _world: <span class="kw-2">&amp;</span>World,
+<a href=#136 id=136 data-nosnippet>136</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
+<a href=#137 id=137 data-nosnippet>137</a>        graph.run_sub_graph(draw_graph::NAME, <span class="macro">vec!</span>[])<span class="question-mark">?</span>;
+<a href=#138 id=138 data-nosnippet>138</a>
+<a href=#139 id=139 data-nosnippet>139</a>        <span class="prelude-val">Ok</span>(())
+<a href=#140 id=140 data-nosnippet>140</a>    }
+<a href=#141 id=141 data-nosnippet>141</a>}</code></pre></div></section></main></body></html>

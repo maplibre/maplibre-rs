@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Source","TileAddressingScheme"],"struct":["VectorSource"],"type":["TileJSONUrl","TileUrl"]};
+window.SIDEBAR_ITEMS = {"enum":["GeoJsonData","Source","TileAddressingScheme"],"struct":["GeoJsonSource","VectorSource"],"type":["TileJSONUrl","TileUrl"]};

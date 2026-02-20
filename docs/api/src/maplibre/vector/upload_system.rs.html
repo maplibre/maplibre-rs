@@ -87,55 +87,58 @@
 <a href=#87 id=87 data-nosnippet>87</a>
 <a href=#88 id=88 data-nosnippet>88</a>        <span class="kw">for </span>style_layer <span class="kw">in </span><span class="kw-2">&amp;</span>style.layers {
 <a href=#89 id=89 data-nosnippet>89</a>            <span class="kw">let </span>layer_id = <span class="kw-2">&amp;</span>style_layer.id;
-<a href=#90 id=90 data-nosnippet>90</a>            <span class="kw">let </span>source_layer = <span class="kw">match </span>style_layer.source_layer.as_ref() {
-<a href=#91 id=91 data-nosnippet>91</a>                <span class="prelude-val">Some</span>(layer) =&gt; layer,
-<a href=#92 id=92 data-nosnippet>92</a>                <span class="prelude-val">None </span>=&gt; {
-<a href=#93 id=93 data-nosnippet>93</a>                    <span class="macro">log::trace!</span>(<span class="string">"style layer {layer_id} does not have a source layer"</span>);
-<a href=#94 id=94 data-nosnippet>94</a>                    <span class="kw">continue</span>;
-<a href=#95 id=95 data-nosnippet>95</a>                }
-<a href=#96 id=96 data-nosnippet>96</a>            };
-<a href=#97 id=97 data-nosnippet>97</a>
-<a href=#98 id=98 data-nosnippet>98</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(AvailableVectorLayerBucket {
-<a href=#99 id=99 data-nosnippet>99</a>                coords,
-<a href=#100 id=100 data-nosnippet>100</a>                feature_indices,
-<a href=#101 id=101 data-nosnippet>101</a>                buffer,
-<a href=#102 id=102 data-nosnippet>102</a>                ..
-<a href=#103 id=103 data-nosnippet>103</a>            }) = available_layers
-<a href=#104 id=104 data-nosnippet>104</a>                .iter()
-<a href=#105 id=105 data-nosnippet>105</a>                .find(|layer| source_layer.as_str() == layer.source_layer)
-<a href=#106 id=106 data-nosnippet>106</a>            <span class="kw">else </span>{
-<a href=#107 id=107 data-nosnippet>107</a>                <span class="kw">continue</span>;
-<a href=#108 id=108 data-nosnippet>108</a>            };
-<a href=#109 id=109 data-nosnippet>109</a>
-<a href=#110 id=110 data-nosnippet>110</a>            <span class="kw">let </span>color: <span class="prelude-ty">Option</span>&lt;Vec4f32&gt; = style_layer
-<a href=#111 id=111 data-nosnippet>111</a>                .paint
-<a href=#112 id=112 data-nosnippet>112</a>                .as_ref()
-<a href=#113 id=113 data-nosnippet>113</a>                .and_then(|paint| paint.get_color())
-<a href=#114 id=114 data-nosnippet>114</a>                .map(|color| color.into());
-<a href=#115 id=115 data-nosnippet>115</a>
-<a href=#116 id=116 data-nosnippet>116</a>            <span class="comment">// Assign every feature in the layer the color from the style
-<a href=#117 id=117 data-nosnippet>117</a>            </span><span class="kw">let </span>feature_metadata = iter::repeat(FillShaderFeatureMetadata {
-<a href=#118 id=118 data-nosnippet>118</a>                color: color.unwrap(),
-<a href=#119 id=119 data-nosnippet>119</a>            })
-<a href=#120 id=120 data-nosnippet>120</a>            .take(feature_indices.iter().sum::&lt;u32&gt;() <span class="kw">as </span>usize)
-<a href=#121 id=121 data-nosnippet>121</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#122 id=122 data-nosnippet>122</a>
-<a href=#123 id=123 data-nosnippet>123</a>            <span class="comment">// FIXME avoid uploading empty indices
-<a href=#124 id=124 data-nosnippet>124</a>            </span><span class="kw">if </span>buffer.buffer.indices.is_empty() {
-<a href=#125 id=125 data-nosnippet>125</a>                <span class="kw">continue</span>;
-<a href=#126 id=126 data-nosnippet>126</a>            }
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a>            <span class="macro">log::debug!</span>(<span class="string">"Allocating geometry at {coords}"</span>);
-<a href=#129 id=129 data-nosnippet>129</a>            buffer_pool.allocate_layer_geometry(
-<a href=#130 id=130 data-nosnippet>130</a>                queue,
-<a href=#131 id=131 data-nosnippet>131</a>                <span class="kw-2">*</span>coords,
-<a href=#132 id=132 data-nosnippet>132</a>                style_layer.clone(),
-<a href=#133 id=133 data-nosnippet>133</a>                buffer,
-<a href=#134 id=134 data-nosnippet>134</a>                ShaderLayerMetadata {
-<a href=#135 id=135 data-nosnippet>135</a>                    z_index: style_layer.index <span class="kw">as </span>f32,
-<a href=#136 id=136 data-nosnippet>136</a>                },
-<a href=#137 id=137 data-nosnippet>137</a>                <span class="kw-2">&amp;</span>feature_metadata,
-<a href=#138 id=138 data-nosnippet>138</a>            );
-<a href=#139 id=139 data-nosnippet>139</a>        }
-<a href=#140 id=140 data-nosnippet>140</a>    }
-<a href=#141 id=141 data-nosnippet>141</a>}</code></pre></div></section></main></body></html>
+<a href=#90 id=90 data-nosnippet>90</a>            <span class="comment">// GeoJSON sources have no source_layer; fall back to the layer id as a
+<a href=#91 id=91 data-nosnippet>91</a>            // virtual source-layer name (matches the name set in process_geojson_features).
+<a href=#92 id=92 data-nosnippet>92</a>            </span><span class="kw">let </span>source_layer = <span class="kw">match </span>style_layer.source_layer.as_ref() {
+<a href=#93 id=93 data-nosnippet>93</a>                <span class="prelude-val">Some</span>(layer) =&gt; layer.as_str(),
+<a href=#94 id=94 data-nosnippet>94</a>                <span class="prelude-val">None </span>=&gt; {
+<a href=#95 id=95 data-nosnippet>95</a>                    <span class="macro">log::trace!</span>(<span class="string">"style layer {layer_id} has no source_layer, using id as virtual source layer"</span>);
+<a href=#96 id=96 data-nosnippet>96</a>                    style_layer.id.as_str()
+<a href=#97 id=97 data-nosnippet>97</a>                }
+<a href=#98 id=98 data-nosnippet>98</a>            };
+<a href=#99 id=99 data-nosnippet>99</a>
+<a href=#100 id=100 data-nosnippet>100</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(AvailableVectorLayerBucket {
+<a href=#101 id=101 data-nosnippet>101</a>                coords,
+<a href=#102 id=102 data-nosnippet>102</a>                feature_indices,
+<a href=#103 id=103 data-nosnippet>103</a>                buffer,
+<a href=#104 id=104 data-nosnippet>104</a>                ..
+<a href=#105 id=105 data-nosnippet>105</a>            }) = available_layers
+<a href=#106 id=106 data-nosnippet>106</a>                .iter()
+<a href=#107 id=107 data-nosnippet>107</a>                .find(|layer| source_layer == layer.source_layer)
+<a href=#108 id=108 data-nosnippet>108</a>            <span class="kw">else </span>{
+<a href=#109 id=109 data-nosnippet>109</a>                <span class="kw">continue</span>;
+<a href=#110 id=110 data-nosnippet>110</a>            };
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a>            <span class="kw">let </span>color: <span class="prelude-ty">Option</span>&lt;Vec4f32&gt; = style_layer
+<a href=#113 id=113 data-nosnippet>113</a>                .paint
+<a href=#114 id=114 data-nosnippet>114</a>                .as_ref()
+<a href=#115 id=115 data-nosnippet>115</a>                .and_then(|paint| paint.get_color())
+<a href=#116 id=116 data-nosnippet>116</a>                .map(|color| color.into());
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="comment">// Assign every feature in the layer the color from the style.
+<a href=#119 id=119 data-nosnippet>119</a>            // Default fill color per MapLibre style spec is black (#000000).
+<a href=#120 id=120 data-nosnippet>120</a>            </span><span class="kw">let </span>feature_metadata = iter::repeat(FillShaderFeatureMetadata {
+<a href=#121 id=121 data-nosnippet>121</a>                color: color.unwrap_or([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]),
+<a href=#122 id=122 data-nosnippet>122</a>            })
+<a href=#123 id=123 data-nosnippet>123</a>            .take(feature_indices.iter().sum::&lt;u32&gt;() <span class="kw">as </span>usize)
+<a href=#124 id=124 data-nosnippet>124</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#125 id=125 data-nosnippet>125</a>
+<a href=#126 id=126 data-nosnippet>126</a>            <span class="comment">// FIXME avoid uploading empty indices
+<a href=#127 id=127 data-nosnippet>127</a>            </span><span class="kw">if </span>buffer.buffer.indices.is_empty() {
+<a href=#128 id=128 data-nosnippet>128</a>                <span class="kw">continue</span>;
+<a href=#129 id=129 data-nosnippet>129</a>            }
+<a href=#130 id=130 data-nosnippet>130</a>
+<a href=#131 id=131 data-nosnippet>131</a>            <span class="macro">log::debug!</span>(<span class="string">"Allocating geometry at {coords}"</span>);
+<a href=#132 id=132 data-nosnippet>132</a>            buffer_pool.allocate_layer_geometry(
+<a href=#133 id=133 data-nosnippet>133</a>                queue,
+<a href=#134 id=134 data-nosnippet>134</a>                <span class="kw-2">*</span>coords,
+<a href=#135 id=135 data-nosnippet>135</a>                style_layer.clone(),
+<a href=#136 id=136 data-nosnippet>136</a>                buffer,
+<a href=#137 id=137 data-nosnippet>137</a>                ShaderLayerMetadata {
+<a href=#138 id=138 data-nosnippet>138</a>                    z_index: style_layer.index <span class="kw">as </span>f32,
+<a href=#139 id=139 data-nosnippet>139</a>                },
+<a href=#140 id=140 data-nosnippet>140</a>                <span class="kw-2">&amp;</span>feature_metadata,
+<a href=#141 id=141 data-nosnippet>141</a>            );
+<a href=#142 id=142 data-nosnippet>142</a>        }
+<a href=#143 id=143 data-nosnippet>143</a>    }
+<a href=#144 id=144 data-nosnippet>144</a>}</code></pre></div></section></main></body></html>
