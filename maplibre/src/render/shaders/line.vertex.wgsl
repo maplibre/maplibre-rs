@@ -32,7 +32,7 @@ fn main(
     let z = -z_index;
     
     let line_width_px = 2.0;
-    let width = line_width_px * 8.0 / max(zoom_factor, 0.001);
+    let width = line_width_px * 8.0 * max(zoom_factor, 0.001);
     let blur = 0.0;
     let gapwidth = 0.0;
     

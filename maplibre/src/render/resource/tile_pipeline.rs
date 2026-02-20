@@ -142,8 +142,10 @@ impl RenderPipeline for TilePipeline {
             } else {
                 Some(wgpu::DepthStencilState {
                     format: self.settings.depth_texture_format,
-                    depth_write_enabled: !self.update_stencil,
-                    depth_compare: wgpu::CompareFunction::Greater,
+                    // Depth writes disabled: layers use painter's algorithm (draw order),
+                    // matching MapLibre GL behavior. Stencil handles tile masking.
+                    depth_write_enabled: false,
+                    depth_compare: wgpu::CompareFunction::Always,
                     stencil: wgpu::StencilState {
                         front: stencil_state,
                         back: stencil_state,
