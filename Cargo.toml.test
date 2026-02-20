@@ -1,0 +1,7 @@
+[package]
+name = "test_column"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+geozero = "0.11"

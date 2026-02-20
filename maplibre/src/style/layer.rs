@@ -7,28 +7,211 @@ use std::{
 
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum StyleProperty<T> {
+    Constant(T),
+    Expression(serde_json::Value),
+}
+
+impl<T: std::str::FromStr + Clone> StyleProperty<T> {
+    pub fn evaluate(&self, feature_properties: &HashMap<String, String>) -> Option<T> {
+        match self {
+            StyleProperty::Constant(value) => Some(value.clone()),
+            StyleProperty::Expression(expr) => {
+                if let Some(arr) = expr.as_array() {
+                    if let Some(op) = arr.get(0).and_then(|v| v.as_str()) {
+                        if op == "match" && arr.len() > 3 {
+                            // Extract the getter e.g. ["get", "ADM0_A3"]
+                            if let Some(get_arr) = arr.get(1).and_then(|v| v.as_array()) {
+                                if get_arr.get(0).and_then(|v| v.as_str()) == Some("get") {
+                                    if let Some(prop_name) = get_arr.get(1).and_then(|v| v.as_str())
+                                    {
+                                        let feature_val_opt = feature_properties.get(prop_name);
+
+                                        // If property is missing, skip match pairs and return fallback
+                                        if feature_val_opt.is_none() {
+                                            if let Some(fallback) =
+                                                arr.last().and_then(|v| v.as_str())
+                                            {
+                                                return fallback.parse::<T>().ok();
+                                            }
+                                            return None;
+                                        }
+
+                                        let feature_val = feature_val_opt.unwrap();
+
+                                        // Search the match array pairs
+                                        let mut i = 2;
+                                        while i < arr.len() - 1 {
+                                            if let Some(match_keys) =
+                                                arr.get(i).and_then(|v| v.as_array())
+                                            {
+                                                // Does this feature_val exist in the match keys?
+                                                let matches = match_keys.iter().any(|k| {
+                                                    k.as_str() == Some(feature_val.as_str())
+                                                });
+                                                if matches {
+                                                    if let Some(color_str) =
+                                                        arr.get(i + 1).and_then(|v| v.as_str())
+                                                    {
+                                                        return color_str.parse::<T>().ok();
+                                                    }
+                                                }
+                                            }
+                                            i += 2;
+                                        }
+                                        // Fallback (last element)
+                                        if i == arr.len() - 1 {
+                                            if let Some(fallback) =
+                                                arr.get(i).and_then(|v| v.as_str())
+                                            {
+                                                return fallback.parse::<T>().ok();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                None
+            }
+        }
+    }
+
+    pub fn deserialize_color_or_none<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<StyleProperty<T>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // For Color types, allow either a raw color string, or an expression value.
+        let v = serde_json::Value::deserialize(deserializer).map_err(serde::de::Error::custom)?;
+        if let Some(s) = v.as_str() {
+            if let Ok(color) = s.parse::<T>() {
+                return Ok(Some(StyleProperty::Constant(color)));
+            }
+        }
+        // If it's a structural generic expression like match arrays
+        if v.is_array() {
+            return Ok(Some(StyleProperty::Expression(v)));
+        }
+        Ok(None)
+    }
+}
+
+impl StyleProperty<f32> {
+    pub fn deserialize_f32_or_none<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<StyleProperty<f32>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v = serde_json::Value::deserialize(deserializer).map_err(serde::de::Error::custom)?;
+        if let Some(f) = v.as_f64() {
+            return Ok(Some(StyleProperty::Constant(f as f32)));
+        }
+        if v.is_array() {
+            return Ok(Some(StyleProperty::Expression(v)));
+        }
+        // Handle {"stops": [[zoom, value], ...]} format
+        if v.is_object() {
+            return Ok(Some(StyleProperty::Expression(v)));
+        }
+        Ok(None)
+    }
+
+    /// Evaluate a zoom-dependent f32 property at the given zoom level.
+    /// Supports constants and `{"stops": [[z0, v0], [z1, v1], ...]}`.
+    pub fn evaluate_at_zoom(&self, zoom: f32) -> f32 {
+        match self {
+            StyleProperty::Constant(v) => *v,
+            StyleProperty::Expression(expr) => {
+                let stops = expr
+                    .get("stops")
+                    .and_then(|s| s.as_array())
+                    .or_else(|| expr.as_array());
+                let Some(stops) = stops else {
+                    return 1.0;
+                };
+                // Parse stops as [(zoom, value), ...]
+                let parsed: Vec<(f32, f32)> = stops
+                    .iter()
+                    .filter_map(|stop| {
+                        let arr = stop.as_array()?;
+                        let z = arr.first()?.as_f64()? as f32;
+                        let v = arr.get(1)?.as_f64()? as f32;
+                        Some((z, v))
+                    })
+                    .collect();
+
+                if parsed.is_empty() {
+                    return 1.0;
+                }
+                if zoom <= parsed[0].0 {
+                    return parsed[0].1;
+                }
+                if zoom >= parsed[parsed.len() - 1].0 {
+                    return parsed[parsed.len() - 1].1;
+                }
+                // Linear interpolation between stops
+                for window in parsed.windows(2) {
+                    let (z0, v0) = window[0];
+                    let (z1, v1) = window[1];
+                    if zoom >= z0 && zoom <= z1 {
+                        let t = (zoom - z0) / (z1 - z0);
+                        return v0 + t * (v1 - v0);
+                    }
+                }
+                parsed[parsed.len() - 1].1
+            }
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<Color>::deserialize_color_or_none"
+    )]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub background_color: Option<Color>,
+    pub background_color: Option<StyleProperty<Color>>,
     // TODO a lot
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FillPaint {
     #[serde(rename = "fill-color")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<Color>::deserialize_color_or_none"
+    )]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_color: Option<Color>,
+    pub fill_color: Option<StyleProperty<Color>>,
     // TODO a lot
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LinePaint {
-    #[serde(rename = "line-color", skip_serializing_if = "Option::is_none")]
-    pub line_color: Option<Color>,
+    #[serde(rename = "line-color")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<Color>::deserialize_color_or_none"
+    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_color: Option<StyleProperty<Color>>,
+
+    #[serde(rename = "line-width")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<f32>::deserialize_f32_or_none"
+    )]
+    pub line_width: Option<StyleProperty<f32>>,
     // TODO a lot
 }
 
@@ -89,7 +272,60 @@ pub struct SymbolPaint {
     #[serde(rename = "text-field")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text_field: Option<String>,
+
+    #[serde(rename = "text-size")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<f32>::deserialize_f32_or_none"
+    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_size: Option<StyleProperty<f32>>,
     // TODO a lot
+}
+
+/// Extract the property name from a text-field template string like "{NAME}" → "NAME".
+/// If no braces, returns the string as-is.
+fn extract_text_field_property(template: &str) -> String {
+    let trimmed = template.trim();
+    if trimmed.starts_with('{') && trimmed.ends_with('}') {
+        trimmed[1..trimmed.len() - 1].to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+/// Extract a text-field property name from a layout JSON value.
+/// Handles both:
+///   - `"text-field": "{NAME}"` (constant string)
+///   - `"text-field": {"stops": [[2, "{ABBREV}"], [4, "{NAME}"]]}` (zoom-dependent)
+fn parse_text_field_from_layout(layout: &serde_json::Value) -> Option<String> {
+    let tf = layout.get("text-field")?;
+    if let Some(s) = tf.as_str() {
+        return Some(extract_text_field_property(s));
+    }
+    // Zoom-dependent: use the last stop's value (highest zoom = most detailed)
+    if let Some(stops) = tf.get("stops").and_then(|v| v.as_array()) {
+        if let Some(last_stop) = stops.last() {
+            if let Some(s) = last_stop.get(1).and_then(|v| v.as_str()) {
+                return Some(extract_text_field_property(s));
+            }
+        }
+    }
+    None
+}
+
+/// Extract text-size from a layout JSON value.
+/// Handles constant numbers and zoom-dependent `{"stops": [[z, size], ...]}`.
+fn parse_text_size_from_layout(layout: &serde_json::Value) -> Option<StyleProperty<f32>> {
+    let ts = layout.get("text-size")?;
+    if let Some(f) = ts.as_f64() {
+        return Some(StyleProperty::Constant(f as f32));
+    }
+    // Object with stops or array
+    if ts.is_object() || ts.is_array() {
+        return Some(StyleProperty::Expression(ts.clone()));
+    }
+    None
 }
 
 /// The different types of paints.
@@ -111,12 +347,27 @@ pub enum LayerPaint {
 impl LayerPaint {
     pub fn get_color(&self) -> Option<Alpha<EncodedSrgb<f32>>> {
         match self {
-            LayerPaint::Background(paint) => paint
-                .background_color
-                .as_ref()
-                .map(|color| color.clone().into()),
-            LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
-            LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Background(paint) => paint.background_color.as_ref().and_then(|property| {
+                if let StyleProperty::Constant(color) = property {
+                    Some(color.clone().into())
+                } else {
+                    None // Expression types have no single static color
+                }
+            }),
+            LayerPaint::Line(paint) => paint.line_color.as_ref().and_then(|property| {
+                if let StyleProperty::Constant(color) = property {
+                    Some(color.clone().into())
+                } else {
+                    None
+                }
+            }),
+            LayerPaint::Fill(paint) => paint.fill_color.as_ref().and_then(|property| {
+                if let StyleProperty::Constant(color) = property {
+                    Some(color.clone().into())
+                } else {
+                    None
+                }
+            }),
             LayerPaint::Raster(_) => None,
             LayerPaint::Symbol(_) => None,
         }
@@ -124,28 +375,82 @@ impl LayerPaint {
 }
 
 /// Stores all the styles for a specific layer.
-#[derive(Serialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct StyleLayer {
-    #[serde(skip)]
-    pub index: u32, // FIXME: How is this initialized?
-    pub id: String, // todo make sure that ids are unique. Styles with non-unique layer ids must not exist
-    #[serde(rename = "type")]
+    pub index: u32,
+    pub id: String,
     pub type_: String,
-    // TODO filter
-    // TODO layout
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<serde_json::Value>,
     pub maxzoom: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub minzoom: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<HashMap<String, String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(flatten)]
     pub paint: Option<LayerPaint>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_layer: Option<String>,
+}
+
+impl Serialize for StyleLayer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        // Count non-None optional fields
+        let mut count = 2; // id + type are always present
+        if self.filter.is_some() {
+            count += 1;
+        }
+        if self.maxzoom.is_some() {
+            count += 1;
+        }
+        if self.minzoom.is_some() {
+            count += 1;
+        }
+        if self.metadata.is_some() {
+            count += 1;
+        }
+        if self.paint.is_some() {
+            count += 1;
+        }
+        if self.source.is_some() {
+            count += 1;
+        }
+        if self.source_layer.is_some() {
+            count += 1;
+        }
+        let mut map = serializer.serialize_map(Some(count))?;
+        map.serialize_entry("id", &self.id)?;
+        map.serialize_entry("type", &self.type_)?;
+        if let Some(ref filter) = self.filter {
+            map.serialize_entry("filter", filter)?;
+        }
+        if let Some(ref maxzoom) = self.maxzoom {
+            map.serialize_entry("maxzoom", maxzoom)?;
+        }
+        if let Some(ref minzoom) = self.minzoom {
+            map.serialize_entry("minzoom", minzoom)?;
+        }
+        if let Some(ref metadata) = self.metadata {
+            map.serialize_entry("metadata", metadata)?;
+        }
+        if let Some(ref paint) = self.paint {
+            // Serialize just the inner paint data (without the LayerPaint tag)
+            match paint {
+                LayerPaint::Background(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Line(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Fill(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Raster(p) => map.serialize_entry("paint", p)?,
+                LayerPaint::Symbol(p) => map.serialize_entry("paint", p)?,
+            }
+        }
+        if let Some(ref source) = self.source {
+            map.serialize_entry("source", source)?;
+        }
+        if let Some(ref source_layer) = self.source_layer {
+            map.serialize_entry("source-layer", source_layer)?;
+        }
+        map.end()
+    }
 }
 
 #[derive(Deserialize)]
@@ -153,12 +458,15 @@ struct StyleLayerDef {
     id: String,
     #[serde(rename = "type")]
     type_: String,
+    filter: Option<serde_json::Value>,
     maxzoom: Option<u8>,
     minzoom: Option<u8>,
     metadata: Option<HashMap<String, String>>,
     source: Option<String>,
+    #[serde(rename = "source-layer")]
     source_layer: Option<String>,
     paint: Option<serde_json::Value>,
+    layout: Option<serde_json::Value>,
 }
 
 impl<'de> serde::Deserialize<'de> for StyleLayer {
@@ -170,13 +478,45 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
 
         let paint = if let Some(p) = def.paint {
             match def.type_.as_str() {
-                "background" => serde_json::from_value(p).map(LayerPaint::Background).ok(),
-                "line" => serde_json::from_value(p).map(LayerPaint::Line).ok(),
-                "fill" => serde_json::from_value(p).map(LayerPaint::Fill).ok(),
-                "raster" => serde_json::from_value(p).map(LayerPaint::Raster).ok(),
-                "symbol" => serde_json::from_value(p).map(LayerPaint::Symbol).ok(),
+                "background" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Background)
+                    .ok(),
+                "line" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Line)
+                    .map_err(|e| log::error!("line paint failed {}: {:?}", def.id, e))
+                    .ok(),
+                "fill" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Fill)
+                    .map_err(|e| log::error!("fill paint failed {}: {:?}", def.id, e))
+                    .ok(),
+                "raster" => serde_json::from_value(p.clone())
+                    .map(LayerPaint::Raster)
+                    .ok(),
+                "symbol" => {
+                    let mut paint: Option<SymbolPaint> = serde_json::from_value(p.clone())
+                        .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
+                        .ok();
+                    // text-field and text-size live in layout, not paint — merge them in
+                    if let (Some(sp), Some(layout)) = (paint.as_mut(), def.layout.as_ref()) {
+                        if sp.text_field.is_none() {
+                            sp.text_field = parse_text_field_from_layout(layout);
+                        }
+                        if sp.text_size.is_none() {
+                            sp.text_size = parse_text_size_from_layout(layout);
+                        }
+                    }
+                    paint.map(LayerPaint::Symbol)
+                }
                 _ => None,
             }
+        } else if def.type_ == "symbol" {
+            // Symbol layers may have no paint but still have layout with text-field/text-size
+            let text_field = def.layout.as_ref().and_then(parse_text_field_from_layout);
+            let text_size = def.layout.as_ref().and_then(parse_text_size_from_layout);
+            Some(LayerPaint::Symbol(SymbolPaint {
+                text_field,
+                text_size,
+            }))
         } else {
             None
         };
@@ -185,6 +525,7 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
             index: 0,
             id: def.id,
             type_: def.type_,
+            filter: def.filter,
             maxzoom: def.maxzoom,
             minzoom: def.minzoom,
             metadata: def.metadata,
@@ -214,12 +555,125 @@ impl Default for StyleLayer {
             index: 0,
             id: "id".to_string(),
             type_: "background".to_string(),
+            filter: None,
             maxzoom: None,
             minzoom: None,
             metadata: None,
             paint: None,
             source: None,
             source_layer: Some("does not exist".to_string()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_evaluate_match_missing_property_returns_fallback() {
+        let json = r#"
+        [
+            "match",
+            ["get", "ADM0_A3"],
+            ["ARM", "ATG"],
+            "rgba(1, 2, 3, 1)",
+            "rgba(9, 9, 9, 1)"
+        ]
+        "#;
+        let expr: serde_json::Value = serde_json::from_str(json).unwrap();
+        let prop: StyleProperty<csscolorparser::Color> = StyleProperty::Expression(expr);
+
+        // Feature that does NOT have the property → should return the JSON fallback color
+        let empty_props = HashMap::new();
+        let color = prop.evaluate(&empty_props).unwrap();
+        assert_eq!(color.to_rgba8(), [9, 9, 9, 255]);
+    }
+
+    #[test]
+    fn test_evaluate_match() {
+        let json = r#"
+        [
+            "match",
+            ["get", "ADM0_A3"],
+            ["ARM", "ATG"],
+            "rgba(1, 2, 3, 1)",
+            "rgba(0, 0, 0, 1)"
+        ]
+        "#;
+        let expr: serde_json::Value = serde_json::from_str(json).unwrap();
+        let prop: StyleProperty<csscolorparser::Color> = StyleProperty::Expression(expr);
+
+        let mut feature_properties = HashMap::new();
+        feature_properties.insert("ADM0_A3".to_string(), "ARM".to_string());
+
+        let color = prop.evaluate(&feature_properties).unwrap();
+        assert_eq!(color.to_rgba8(), [1, 2, 3, 255]);
+    }
+
+    #[test]
+    fn test_symbol_text_field_from_layout() {
+        let json = r#"{
+            "id": "countries-label",
+            "type": "symbol",
+            "paint": {
+                "text-color": "rgba(8, 37, 77, 1)"
+            },
+            "layout": {
+                "text-field": "{NAME}",
+                "text-font": ["Open Sans Semibold"]
+            },
+            "source": "maplibre",
+            "source-layer": "centroids"
+        }"#;
+        let layer: StyleLayer = serde_json::from_str(json).unwrap();
+        assert_eq!(layer.type_, "symbol");
+        match &layer.paint {
+            Some(LayerPaint::Symbol(sp)) => {
+                assert_eq!(sp.text_field.as_deref(), Some("NAME"));
+            }
+            other => panic!("expected Symbol paint, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_symbol_text_field_zoom_dependent() {
+        let json = r#"{
+            "id": "test-label",
+            "type": "symbol",
+            "paint": {},
+            "layout": {
+                "text-field": {"stops": [[2, "{ABBREV}"], [4, "{NAME}"]]}
+            },
+            "source": "maplibre",
+            "source-layer": "centroids"
+        }"#;
+        let layer: StyleLayer = serde_json::from_str(json).unwrap();
+        match &layer.paint {
+            Some(LayerPaint::Symbol(sp)) => {
+                // Should pick the last stop (highest zoom) → NAME
+                assert_eq!(sp.text_field.as_deref(), Some("NAME"));
+            }
+            other => panic!("expected Symbol paint, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_demotiles_symbol_layers_have_text_field() {
+        let style: crate::style::Style = Default::default();
+        for layer in &style.layers {
+            if layer.type_ == "symbol" {
+                match &layer.paint {
+                    Some(LayerPaint::Symbol(sp)) => {
+                        assert!(
+                            sp.text_field.is_some(),
+                            "symbol layer '{}' should have text_field parsed from layout",
+                            layer.id
+                        );
+                    }
+                    _ => panic!("symbol layer '{}' has no Symbol paint", layer.id),
+                }
+            }
         }
     }
 }

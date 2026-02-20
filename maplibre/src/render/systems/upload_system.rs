@@ -25,7 +25,12 @@ pub fn upload_system(
     };
 
     let view_proj = view_state.view_projection();
-    tile_view_pattern.upload_pattern(queue, &view_proj);
+    tile_view_pattern.upload_pattern(
+        queue,
+        &view_proj,
+        view_state.width() as f32,
+        view_state.height() as f32,
+    );
 
     Ok(())
 }

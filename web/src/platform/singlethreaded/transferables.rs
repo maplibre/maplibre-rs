@@ -195,11 +195,19 @@ impl LayerTessellated for FlatBufferTransferable {
         &WebMessageTag::LayerTessellated
     }
 
+    fn style_layer_id(&self) -> &str {
+        let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.style_layer_id()
+            .unwrap_or_else(|| data.layer_name().unwrap_or(""))
+    }
+
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
@@ -214,6 +222,13 @@ impl LayerTessellated for FlatBufferTransferable {
         let indices = inner_builder.create_vector(&buffer.buffer.indices);
         let feature_indices = inner_builder.create_vector(&feature_indices);
         let layer_name = inner_builder.create_string(&layer_data.name);
+        let style_layer_id_fb = inner_builder.create_string(&style_layer_id);
+        // Flatten Vec<[f32; 4]> into Vec<f32> for FlatBuffer storage
+        let flat_colors: Vec<f32> = feature_colors
+            .iter()
+            .flat_map(|c| c.iter().copied())
+            .collect();
+        let feature_colors_fb = inner_builder.create_vector(&flat_colors);
 
         let mut builder = FlatLayerTessellatedBuilder::new(&mut inner_builder);
 
@@ -227,6 +242,8 @@ impl LayerTessellated for FlatBufferTransferable {
         builder.add_indices(indices);
         builder.add_feature_indices(feature_indices);
         builder.add_usable_indices(buffer.usable_indices);
+        builder.add_style_layer_id(style_layer_id_fb);
+        builder.add_feature_colors(feature_colors_fb);
         let root = builder.finish();
 
         inner_builder.finish(root, None);
@@ -259,11 +276,29 @@ impl LayerTessellated for FlatBufferTransferable {
         let indices = data.indices().unwrap();
         let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
         let usable_indices = data.usable_indices();
+        let layer_name = data.layer_name().unwrap().to_owned();
+        let style_layer_id = data
+            .style_layer_id()
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| layer_name.clone());
+        // Reconstruct Vec<[f32; 4]> from the flat float array
+        let feature_colors: Vec<[f32; 4]> = data
+            .feature_colors()
+            .map(|fc| {
+                fc.iter()
+                    .collect::<Vec<f32>>()
+                    .chunks(4)
+                    .map(|c| [c[0], c[1], c[2], c[3]])
+                    .collect()
+            })
+            .unwrap_or_default();
         AvailableVectorLayerBucket {
             coords: LayerTessellated::coords(&self),
-            source_layer: data.layer_name().unwrap().to_owned(),
+            source_layer: layer_name,
+            style_layer_id,
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
             feature_indices,
+            feature_colors,
         }
     }
 }
@@ -403,8 +438,9 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
         new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
-        features: Vec<Feature>,
+        _features: Vec<Feature>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
@@ -443,6 +479,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         let new_indices = inner_builder.create_vector(&new_buffer.buffer.indices);
 
         let layer_name = inner_builder.create_string(&layer_data.name);
+        let style_layer_id_fb = inner_builder.create_string(&style_layer_id);
 
         let mut builder = FlatSymbolLayerTessellatedBuilder::new(&mut inner_builder);
 
@@ -458,6 +495,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         builder.add_new_vertices(new_vertices);
         builder.add_new_indices(new_indices);
         builder.add_new_usable_indices(new_buffer.usable_indices);
+        builder.add_style_layer_id(style_layer_id_fb);
         let root = builder.finish();
 
         inner_builder.finish(root, None);
@@ -515,9 +553,15 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
             .unwrap_or_default();
         let new_usable_indices = data.new_usable_indices();
 
+        let layer_name = data.layer_name().unwrap().to_owned();
+        let style_layer_id = data
+            .style_layer_id()
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| layer_name.clone());
         SymbolLayerData {
-            coords: LayerTessellated::coords(&self),
-            source_layer: data.layer_name().unwrap().to_owned(),
+            coords: SymbolLayerTessellated::coords(&self),
+            source_layer: layer_name,
+            style_layer_id,
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
             new_buffer: OverAlignedVertexBuffer::from_iters(
                 new_vertices.into_iter(),

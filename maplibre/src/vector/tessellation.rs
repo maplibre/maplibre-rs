@@ -1,9 +1,9 @@
 //! Tessellation for lines and polygons is implemented here.
 
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
 
 use bytemuck::Pod;
-use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
+use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::{
     geom,
     path::{path::Builder, Path},
@@ -129,6 +129,13 @@ pub struct ZeroTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
     pub buffer: VertexBuffers<ShaderVertex, I>,
 
     pub feature_indices: Vec<u32>,
+    pub feature_properties: HashMap<String, String>,
+    pub feature_colors: Vec<[f32; 4]>,
+    pub fallback_color: [f32; 4],
+    pub style_property: Option<crate::style::layer::StyleProperty<csscolorparser::Color>>,
+    /// When true, polygon geometry is tessellated as strokes (outlines) instead of fills.
+    /// This is used when a line-type style layer references polygon source geometry.
+    pub is_line_layer: bool,
     current_index: usize,
 }
 
@@ -140,6 +147,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
             path_builder: RefCell::new(Path::builder()),
             buffer: VertexBuffers::new(),
             feature_indices: Vec::new(),
+            feature_properties: HashMap::new(),
+            feature_colors: Vec::new(),
+            fallback_color: [0.0, 0.0, 0.0, 1.0],
+            style_property: None,
+            is_line_layer: false,
             current_index: 0,
             path_open: false,
             is_point: false,
@@ -151,7 +163,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
     /// Stores current indices to the output. That way we know which vertices correspond to which
     /// feature in the output.
     fn update_feature_indices(&mut self) {
-        let next_index = self.buffer.indices.len();
+        let next_index = self.buffer.vertices.len();
         let indices = (next_index - self.current_index) as u32;
         self.feature_indices.push(indices);
         self.current_index = next_index;
@@ -269,7 +281,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
 
         self.end(true);
         if tagged {
-            self.tessellate_fill();
+            if self.is_line_layer {
+                self.tessellate_strokes();
+            } else {
+                self.tessellate_fill();
+            }
         }
         Ok(())
     }
@@ -282,7 +298,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
     fn multipolygon_end(&mut self, _idx: usize) -> GeoResult<()> {
         // log::info!("multipolygon_end");
 
-        self.tessellate_fill();
+        if self.is_line_layer {
+            self.tessellate_strokes();
+        } else {
+            self.tessellate_fill();
+        }
         Ok(())
     }
 }
@@ -290,6 +310,16 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyProcessor
     for ZeroTessellator<I>
 {
+    fn property(
+        &mut self,
+        _idx: usize,
+        name: &str,
+        value: &ColumnValue,
+    ) -> geozero::error::Result<bool> {
+        self.feature_properties
+            .insert(name.to_string(), value.to_string());
+        Ok(false)
+    }
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeatureProcessor
@@ -297,6 +327,23 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         self.update_feature_indices();
+        let color = if let Some(style) = &self.style_property {
+            if let Some(c) = style.evaluate(&self.feature_properties) {
+                [c.r as f32, c.g as f32, c.b as f32, c.a as f32]
+            } else {
+                tracing::debug!(
+                    "Style evaluation failed for feature properties: {:?}, style: {:?}",
+                    self.feature_properties,
+                    style
+                );
+                self.fallback_color
+            }
+        } else {
+            self.fallback_color
+        };
+
+        self.feature_colors.push(color);
+        self.feature_properties.clear();
         Ok(())
     }
 }

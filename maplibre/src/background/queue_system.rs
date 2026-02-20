@@ -34,11 +34,10 @@ pub fn queue_system(
     // We just iterate through the style layers and issue a single quad draw for each background layer.
     for layer in &style.layers {
         if layer.type_ == "background" {
-            let c = match &layer.paint {
-                Some(LayerPaint::Background(paint)) => paint
-                    .background_color
-                    .as_ref()
-                    .map(|c| c.to_array())
+            let c: [f32; 4] = match &layer.paint {
+                Some(paint @ LayerPaint::Background(_)) => paint
+                    .get_color()
+                    .map(|c| c.into())
                     .unwrap_or([0.0, 0.0, 0.0, 1.0]),
                 _ => [0.0, 0.0, 0.0, 1.0],
             };
@@ -50,6 +49,7 @@ pub fn queue_system(
                 draw_function: Box::new(DrawState::<LayerItem, DrawBackground>::new())
                     as Box<dyn crate::render::render_phase::Draw<LayerItem>>,
                 index: layer.index,
+                is_line: false,
                 style_layer: layer.id.clone(),
                 source_shape: crate::render::tile_view_pattern::TileShape::default(),
 

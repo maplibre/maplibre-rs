@@ -62,7 +62,7 @@ pub struct VectorSource {
     pub scheme: Option<TileAddressingScheme>,
     /// Array of URLs which can contain place holders like {x}, {y}, {z}.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tiles: Option<TileUrl>,
+    pub tiles: Option<Vec<TileUrl>>,
     // url: Option<TileJSONUrl>,
     // TODO volatile
 }

@@ -126,7 +126,13 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn upload_pattern(&mut self, queue: &Q, view_proj: &ViewProjection) {
+    pub fn upload_pattern(
+        &mut self,
+        queue: &Q,
+        view_proj: &ViewProjection,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) {
         let mut buffer = Vec::with_capacity(self.view_tiles.len());
 
         let mut add_to_buffer = |shape: &mut TileShape| {
@@ -141,6 +147,8 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 // better supported.
                 transform,
                 zoom_factor: shape.zoom_factor as f32,
+                viewport_width,
+                viewport_height,
             });
         };
 

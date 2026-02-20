@@ -44,8 +44,23 @@ pub struct WindowHead {
     size: PhysicalSize,
 
     texture_format: wgpu::TextureFormat,
+    /// Non-sRGB variant of texture_format used for rendering.
+    /// Prevents automatic linear→sRGB conversion by the GPU, since our colors
+    /// (from CSS) are already in sRGB space.
+    render_format: wgpu::TextureFormat,
     present_mode: wgpu::PresentMode,
     texture_format_features: TextureFormatFeatures,
+}
+
+/// Returns the non-sRGB variant of a texture format.
+/// This prevents the GPU from applying automatic linear→sRGB gamma conversion,
+/// which would double-gamma colors that are already in sRGB space (e.g., CSS colors).
+fn strip_srgb(format: wgpu::TextureFormat) -> wgpu::TextureFormat {
+    match format {
+        wgpu::TextureFormat::Rgba8UnormSrgb => wgpu::TextureFormat::Rgba8Unorm,
+        wgpu::TextureFormat::Bgra8UnormSrgb => wgpu::TextureFormat::Bgra8Unorm,
+        other => other,
+    }
 }
 
 impl WindowHead {
@@ -55,6 +70,11 @@ impl WindowHead {
     }
 
     pub fn configure(&self, device: &wgpu::Device) {
+        let mut view_formats = vec![self.texture_format];
+        if self.render_format != self.texture_format {
+            view_formats.push(self.render_format);
+        }
+
         let surface_config = wgpu::SurfaceConfiguration {
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -62,7 +82,7 @@ impl WindowHead {
             width: self.size.width(),
             height: self.size.height(),
             present_mode: self.present_mode,
-            view_formats: vec![self.texture_format],
+            view_formats,
             desired_maximum_frame_latency: 2,
         };
 
@@ -191,7 +211,8 @@ impl Surface {
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-        log::info!("format description: {texture_format:?}");
+        let render_format = strip_srgb(texture_format);
+        log::info!("surface format: {texture_format:?}, render format: {render_format:?}");
 
         let texture_format_features = adapter.get_texture_format_features(texture_format);
         log::info!("format features: {texture_format_features:?}");
@@ -202,6 +223,7 @@ impl Surface {
                 surface,
                 size,
                 texture_format,
+                render_format,
                 texture_format_features,
                 present_mode: settings.present_mode,
             }),
@@ -263,7 +285,7 @@ impl Surface {
 
     pub fn surface_format(&self) -> wgpu::TextureFormat {
         match &self.head {
-            Head::Headed(headed) => headed.texture_format,
+            Head::Headed(headed) => headed.render_format,
             Head::Headless(headless) => headless.texture_format,
         }
     }
@@ -272,7 +294,11 @@ impl Surface {
     pub fn create_view(&self, device: &wgpu::Device) -> TextureView {
         match &self.head {
             Head::Headed(window) => {
-                let WindowHead { surface, .. } = window;
+                let WindowHead {
+                    surface,
+                    render_format,
+                    ..
+                } = window;
                 let frame = match surface.get_current_texture() {
                     Ok(view) => view,
                     Err(wgpu::SurfaceError::Outdated) => {
@@ -284,7 +310,15 @@ impl Surface {
                     }
                     err => err.expect("Failed to acquire next swap chain texture!"),
                 };
-                frame.into()
+                // Create view with non-sRGB format to prevent double-gamma on CSS colors
+                let view = frame.texture.create_view(&wgpu::TextureViewDescriptor {
+                    format: Some(*render_format),
+                    ..Default::default()
+                });
+                TextureView::SurfaceTexture {
+                    view,
+                    texture: frame,
+                }
             }
             Head::Headless(arc) => arc
                 .texture

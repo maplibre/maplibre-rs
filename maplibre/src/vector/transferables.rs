@@ -65,7 +65,9 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self
     where
         Self: Sized;
@@ -73,6 +75,8 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
     fn coords(&self) -> WorldTileCoords;
 
     fn is_empty(&self) -> bool;
+
+    fn style_layer_id(&self) -> &str;
 
     fn to_bucket(self) -> AvailableVectorLayerBucket;
 }
@@ -86,6 +90,7 @@ pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
         new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
         features: Vec<Feature>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self
     where
         Self: Sized;
@@ -187,7 +192,9 @@ pub struct DefaultLayerTessellated {
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
+    pub feature_colors: Vec<[f32; 4]>,
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
+    pub style_layer_id: String,
 }
 
 impl Debug for DefaultLayerTessellated {
@@ -211,13 +218,17 @@ impl LayerTessellated for DefaultLayerTessellated {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self {
         Self {
             coords,
             buffer,
             feature_indices,
+            feature_colors,
             layer_data,
+            style_layer_id,
         }
     }
 
@@ -229,12 +240,18 @@ impl LayerTessellated for DefaultLayerTessellated {
         self.buffer.usable_indices == 0
     }
 
+    fn style_layer_id(&self) -> &str {
+        &self.style_layer_id
+    }
+
     fn to_bucket(self) -> AvailableVectorLayerBucket {
         AvailableVectorLayerBucket {
             coords: self.coords,
             source_layer: self.layer_data.name,
+            style_layer_id: self.style_layer_id,
             buffer: self.buffer,
             feature_indices: self.feature_indices,
+            feature_colors: self.feature_colors,
         }
     }
 }
@@ -245,6 +262,7 @@ pub struct DefaultSymbolLayerTessellated {
     pub new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
     pub features: Vec<Feature>,
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
+    pub style_layer_id: String,
 }
 
 impl Debug for crate::vector::transferables::DefaultSymbolLayerTessellated {
@@ -270,6 +288,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
         new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
         features: Vec<Feature>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self {
         Self {
             coords,
@@ -277,6 +296,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
             new_buffer,
             features,
             layer_data,
+            style_layer_id,
         }
     }
 
@@ -292,6 +312,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
         SymbolLayerData {
             coords: self.coords,
             source_layer: self.layer_data.name,
+            style_layer_id: self.style_layer_id,
             buffer: self.buffer,
             new_buffer: self.new_buffer,
             features: self.features,

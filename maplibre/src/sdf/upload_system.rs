@@ -13,7 +13,7 @@ use crate::{
         Renderer,
     },
     sdf::{SymbolBufferPool, SymbolLayerData, SymbolLayersDataComponent},
-    style::Style,
+    style::{layer::LayerPaint, Style},
     tcs::{
         system::{SystemError, SystemResult},
         tiles::Tiles,
@@ -41,6 +41,8 @@ pub fn upload_system(
         ViewStatePadding::Loose,
     );
 
+    let zoom = view_state.zoom().level();
+
     if let Some(view_region) = &view_region {
         upload_symbol_layer(
             symbol_buffer_pool,
@@ -48,6 +50,7 @@ pub fn upload_system(
             &mut world.tiles,
             style,
             view_region,
+            zoom,
         );
     }
 
@@ -61,6 +64,7 @@ fn upload_symbol_layer(
     tiles: &mut Tiles,
     style: &Style,
     view_region: &ViewRegion,
+    zoom: f32,
 ) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
@@ -69,7 +73,7 @@ fn upload_symbol_layer(
         };
 
         let loaded_layers = symbol_buffer_pool
-            .get_loaded_source_layers_at(coords)
+            .get_loaded_style_layers_at(coords)
             .unwrap_or_default();
 
         let available_layers = vector_layers
@@ -120,6 +124,16 @@ fn upload_symbol_layer(
                 continue;
             }
 
+            // Extract text-size from style (default 16.0 per MapLibre GL JS spec)
+            let text_size = match &style_layer.paint {
+                Some(LayerPaint::Symbol(paint)) => paint
+                    .text_size
+                    .as_ref()
+                    .map(|s| s.evaluate_at_zoom(zoom))
+                    .unwrap_or(16.0),
+                _ => 16.0,
+            };
+
             log::debug!("Allocating geometry at {coords}");
             symbol_buffer_pool.allocate_layer_geometry(
                 queue,
@@ -128,6 +142,7 @@ fn upload_symbol_layer(
                 buffer,
                 ShaderLayerMetadata {
                     z_index: style_layer.index as f32,
+                    line_width: text_size, // repurposed as text_size for SDF pipeline
                 },
                 &feature_metadata,
             );

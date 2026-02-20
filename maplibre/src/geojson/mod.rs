@@ -67,7 +67,19 @@ impl<T> ProjectingTessellator<T> {
 
 impl<T: GeomProcessor> GeomProcessor for ProjectingTessellator<T> {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
+        if x.is_nan() || y.is_nan() {
+            println!(
+                "ProjectingTessellator received NaN Input! x={}, y={}, idx={}",
+                x, y, idx
+            );
+        }
         let (tx, ty) = self.project(x, y);
+        if !tx.is_finite() || !ty.is_finite() {
+            println!(
+                "ProjectingTessellator output non-finite! lon={}, lat={} -> tx={}, ty={}",
+                x, y, tx, ty
+            );
+        }
         self.inner.xy(tx, ty, idx)
     }
 
@@ -210,12 +222,22 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
         };
 
         match paint {
-            LayerPaint::Fill(_) | LayerPaint::Line(_) => {
-                let mut projecting = ProjectingTessellator::new(
-                    coords,
-                    request.project,
-                    ZeroTessellator::<IndexDataType>::default(),
-                );
+            LayerPaint::Fill(_) | LayerPaint::Line(_) | LayerPaint::Background(_) => {
+                let mut tessellator = ZeroTessellator::<IndexDataType>::default();
+                match paint {
+                    LayerPaint::Fill(p) => tessellator.style_property = p.fill_color.clone(),
+                    LayerPaint::Line(p) => {
+                        tessellator.style_property = p.line_color.clone();
+                        tessellator.is_line_layer = true;
+                    }
+                    LayerPaint::Background(p) => {
+                        tessellator.style_property = p.background_color.clone()
+                    }
+                    _ => {}
+                }
+
+                let mut projecting =
+                    ProjectingTessellator::new(coords, request.project, tessellator);
 
                 let mut geojson_src = geozero::geojson::GeoJson(json_str.as_str());
                 if let Err(e) = geojson_src.process(&mut projecting) {
@@ -249,7 +271,9 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                         coords,
                         inner.buffer.into(),
                         inner.feature_indices,
+                        inner.feature_colors,
                         synthetic_layer,
+                        style_layer.id.clone(),
                     ))
                     .map_err(ProcessGeoJsonError::SendError)?;
             }
@@ -291,6 +315,7 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                         inner.quad_buffer.into(),
                         inner.features,
                         synthetic_layer,
+                        style_layer.id.clone(),
                     ))
                     .map_err(ProcessGeoJsonError::SendError)?;
             }
