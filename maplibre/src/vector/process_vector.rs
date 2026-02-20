@@ -72,7 +72,8 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 tessellator.style_property = p.fill_color.clone()
                             }
                             LayerPaint::Line(p) => {
-                                tessellator.style_property = p.line_color.clone()
+                                tessellator.style_property = p.line_color.clone();
+                                tessellator.is_line_layer = true;
                             }
                             LayerPaint::Background(p) => {
                                 tessellator.style_property = p.background_color.clone()

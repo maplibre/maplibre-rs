@@ -226,7 +226,10 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                 let mut tessellator = ZeroTessellator::<IndexDataType>::default();
                 match paint {
                     LayerPaint::Fill(p) => tessellator.style_property = p.fill_color.clone(),
-                    LayerPaint::Line(p) => tessellator.style_property = p.line_color.clone(),
+                    LayerPaint::Line(p) => {
+                        tessellator.style_property = p.line_color.clone();
+                        tessellator.is_line_layer = true;
+                    }
                     LayerPaint::Background(p) => {
                         tessellator.style_property = p.background_color.clone()
                     }

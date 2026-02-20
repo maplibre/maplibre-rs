@@ -134,6 +134,9 @@ pub struct ZeroTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
     pub feature_colors: Vec<[f32; 4]>,
     pub fallback_color: [f32; 4],
     pub style_property: Option<crate::style::layer::StyleProperty<csscolorparser::Color>>,
+    /// When true, polygon geometry is tessellated as strokes (outlines) instead of fills.
+    /// This is used when a line-type style layer references polygon source geometry.
+    pub is_line_layer: bool,
     current_index: usize,
 }
 
@@ -149,6 +152,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
             feature_colors: Vec::new(),
             fallback_color: [0.0, 0.0, 0.0, 1.0],
             style_property: None,
+            is_line_layer: false,
             current_index: 0,
             path_open: false,
             is_point: false,
@@ -278,7 +282,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
 
         self.end(true);
         if tagged {
-            self.tessellate_fill();
+            if self.is_line_layer {
+                self.tessellate_strokes();
+            } else {
+                self.tessellate_fill();
+            }
         }
         Ok(())
     }
@@ -291,7 +299,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
     fn multipolygon_end(&mut self, _idx: usize) -> GeoResult<()> {
         // log::info!("multipolygon_end");
 
-        self.tessellate_fill();
+        if self.is_line_layer {
+            self.tessellate_strokes();
+        } else {
+            self.tessellate_fill();
+        }
         Ok(())
     }
 }
