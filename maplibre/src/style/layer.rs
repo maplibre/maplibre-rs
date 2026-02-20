@@ -272,6 +272,14 @@ pub struct SymbolPaint {
     #[serde(rename = "text-field")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text_field: Option<String>,
+
+    #[serde(rename = "text-size")]
+    #[serde(
+        default,
+        deserialize_with = "StyleProperty::<f32>::deserialize_f32_or_none"
+    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_size: Option<StyleProperty<f32>>,
     // TODO a lot
 }
 
@@ -302,6 +310,20 @@ fn parse_text_field_from_layout(layout: &serde_json::Value) -> Option<String> {
                 return Some(extract_text_field_property(s));
             }
         }
+    }
+    None
+}
+
+/// Extract text-size from a layout JSON value.
+/// Handles constant numbers and zoom-dependent `{"stops": [[z, size], ...]}`.
+fn parse_text_size_from_layout(layout: &serde_json::Value) -> Option<StyleProperty<f32>> {
+    let ts = layout.get("text-size")?;
+    if let Some(f) = ts.as_f64() {
+        return Some(StyleProperty::Constant(f as f32));
+    }
+    // Object with stops or array
+    if ts.is_object() || ts.is_array() {
+        return Some(StyleProperty::Expression(ts.clone()));
     }
     None
 }
@@ -422,10 +444,13 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
                         serde_json::from_value(p.clone())
                             .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
                             .ok();
-                    // text-field lives in layout, not paint — merge it in
+                    // text-field and text-size live in layout, not paint — merge them in
                     if let (Some(sp), Some(layout)) = (paint.as_mut(), def.layout.as_ref()) {
                         if sp.text_field.is_none() {
                             sp.text_field = parse_text_field_from_layout(layout);
+                        }
+                        if sp.text_size.is_none() {
+                            sp.text_size = parse_text_size_from_layout(layout);
                         }
                     }
                     paint.map(LayerPaint::Symbol)
@@ -433,9 +458,13 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
                 _ => None,
             }
         } else if def.type_ == "symbol" {
-            // Symbol layers may have no paint but still have layout with text-field
+            // Symbol layers may have no paint but still have layout with text-field/text-size
             let text_field = def.layout.as_ref().and_then(parse_text_field_from_layout);
-            Some(LayerPaint::Symbol(SymbolPaint { text_field }))
+            let text_size = def.layout.as_ref().and_then(parse_text_size_from_layout);
+            Some(LayerPaint::Symbol(SymbolPaint {
+                text_field,
+                text_size,
+            }))
         } else {
             None
         };

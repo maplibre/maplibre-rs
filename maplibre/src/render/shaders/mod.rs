@@ -656,18 +656,24 @@ impl Shader for SymbolShader {
                     ],
                 },
                 // layer metadata
-                //VertexBufferLayout {
-                //    array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
-                //    step_mode: wgpu::VertexStepMode::Instance,
-                //    attributes: vec![
-                //        // z_index
-                //        wgpu::VertexAttribute {
-                //            offset: 0,
-                //            format: wgpu::VertexFormat::Float32,
-                //            shader_location: 10,
-                //        },
-                //    ],
-                //},
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // z_index
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 10,
+                        },
+                        // text_size (repurposed from line_width)
+                        wgpu::VertexAttribute {
+                            offset: wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 13,
+                        },
+                    ],
+                },
                 // features
                 //VertexBufferLayout {
                 //    array_stride: std::mem::size_of::<SDFShaderFeatureMetadata>() as u64,
