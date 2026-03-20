@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["Ceil","Floor","One","Round","Zero"]};
+window.SIDEBAR_ITEMS = {"mod":["float"],"trait":["Ceil","Floor","One","Round","Zero"]};
