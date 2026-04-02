@@ -64,7 +64,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         continue;
                     }
 
-                    // TODO: Make tesselation depend on style? So maybe we need to request even if it exists
+                    // TODO: Make tessellation depend on style? So maybe we need to request even if it exists
                     if world
                         .tiles
                         .query::<&VectorLayerBucketComponent>(coords)

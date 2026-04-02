@@ -339,14 +339,14 @@ fn get_glyph_advance(
             return 0.0;
         }
 
-        if it.expect("cant be none").is_none() {
+        if it.expect("can't be none").is_none() {
             return 0.0;
         }
 
         return (it
-            .expect("cant be none")
+            .expect("can't be none")
             .as_ref()
-            .expect("cant be none")
+            .expect("can't be none")
             .metrics
             .advance as f64
             * section.scale)
@@ -516,7 +516,7 @@ fn determine_line_breaks(
 
     let mut potential_breaks: Vec<PotentialBreak> = Vec::new();
     let mut current_x: f64 = 0.;
-    // Find first occurance of zero width space (ZWSP) character.
+    // Find first occurrence of zero width space (ZWSP) character.
     let has_server_suggested_breaks = logical_input
         .raw_text()
         .as_slice()
@@ -694,7 +694,7 @@ fn shape_lines(
                     continue;
                 }
 
-                let glyph_position_map = glyph_position_map.expect("cant be none");
+                let glyph_position_map = glyph_position_map.expect("can't be none");
 
                 let glyph_position = glyph_position_map.get(&code_point);
                 if let Some(glyph_position) = glyph_position {
@@ -705,7 +705,7 @@ fn shape_lines(
                     if glyphs.is_none() {
                         continue;
                     }
-                    let glyphs = glyphs.expect("cant be none");
+                    let glyphs = glyphs.expect("can't be none");
 
                     let glyph = glyphs.get(&code_point);
 
@@ -713,12 +713,12 @@ fn shape_lines(
                         continue;
                     }
 
-                    if glyph.expect("cant be none").is_none() {
+                    if glyph.expect("can't be none").is_none() {
                         continue;
                     }
 
                     metrics =
-                        (glyph.expect("cant be none").as_ref().expect("cant be none")).metrics;
+                        (glyph.expect("can't be none").as_ref().expect("can't be none")).metrics;
                 }
                 advance = metrics.advance as f64;
                 // We don't know the baseline, but since we're laying out

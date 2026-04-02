@@ -332,7 +332,7 @@ impl FeatureProcessor for TextTessellatorNew {
             | Some(Geometry::GeometryCollection(_))
             | Some(Geometry::Rect(_))
             | Some(Geometry::Triangle(_)) => {
-                log::debug!("Unsupported geometry in text tesselation")
+                log::debug!("Unsupported geometry in text tessellation")
             }
             None => {
                 log::debug!("No geometry in feature")

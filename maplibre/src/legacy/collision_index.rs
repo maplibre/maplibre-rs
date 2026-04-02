@@ -541,7 +541,7 @@ impl CollisionIndex {
         camera_to_anchor_distance: f64,
         pitch_with_map: bool,
     ) -> f64 {
-        // This is a quick and dirty solution for chosing which collision circles to
+        // This is a quick and dirty solution for choosing which collision circles to
         // use (since collision circles are laid out in tile units). Ideally, I
         // think we should generate collision circles on the fly in viewport
         // coordinates at the time we do collision detection.

@@ -61,7 +61,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         world: &World,
     ) -> Vec<ViewTile> {
         let mut view_tiles = Vec::with_capacity(self.view_tiles.len());
-        let mut source_tiles = HashSet::new(); // TODO: Optimization potential: Replace wit a bitmap, that allows false-negative matches
+        let mut source_tiles = HashSet::new(); // TODO: Optimization potential: Replace with a bitmap, that allows false-negative matches
 
         for coords in view_region.iter() {
             if coords.build_quad_key().is_none() {

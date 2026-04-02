@@ -30,7 +30,7 @@ fn main(in: VertexOutput) -> Output {
     // At which offset is the outline of the SDF?
     let outline_center_offset: f32 = -0.25;
 
-    // shift outline by `outline_width` to the ouside
+    // shift outline by `outline_width` to the outside
     let buffer_center: f32 = buffer_center_outline + outline_center_offset;
 
     let outline_color = vec3<f32>(0.0, 0.0, 0.0);

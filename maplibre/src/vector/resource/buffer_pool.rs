@@ -195,7 +195,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         &self.feature_metadata.inner
     }
 
-    /// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.
+    /// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is usable.
     /// The function returns the `bytes` and `aligned_bytes`. See [`OverAlignedVertexBuffer`].
     fn align(
         stride: wgpu::BufferAddress,

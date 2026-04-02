@@ -218,9 +218,9 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         if let Err(e) = layer.process(&mut tessellator) {
                             context.layer_missing(coords, &source_layer)?;
 
-                            tracing::error!("tesselation for layer source {source_layer} at {coords} failed {e:?}");
+                            tracing::error!("tessellation for layer source {source_layer} at {coords} failed {e:?}");
                         } else {
-                            context.layer_tesselation_finished(
+                            context.layer_tessellation_finished(
                                 coords,
                                 tessellator.buffer.into(),
                                 tessellator.feature_indices,
@@ -241,10 +241,10 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         if let Err(e) = layer.process(&mut tessellator_new) {
                             context.layer_missing(coords, &source_layer)?;
 
-                            tracing::error!("tesselation for layer source {source_layer} at {coords} failed {e:?}");
+                            tracing::error!("tessellation for layer source {source_layer} at {coords} failed {e:?}");
                         } else {
                             tessellator_new.finish();
-                            context.symbol_layer_tesselation_finished(
+                            context.symbol_layer_tessellation_finished(
                                 coords,
                                 tessellator.quad_buffer.into(),
                                 tessellator_new.quad_buffer.into(),
@@ -336,7 +336,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
             .map_err(|e| ProcessVectorError::SendError(e))
     }
 
-    fn layer_tesselation_finished(
+    fn layer_tessellation_finished(
         &mut self,
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -357,7 +357,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
             .map_err(|e| ProcessVectorError::SendError(e))
     }
 
-    fn symbol_layer_tesselation_finished(
+    fn symbol_layer_tessellation_finished(
         &mut self,
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
