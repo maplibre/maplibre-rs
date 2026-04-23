@@ -5,7 +5,6 @@ use std::{
     collections::{HashMap, VecDeque},
 };
 
-use log::error;
 use smallvec::{smallvec, SmallVec};
 use thiserror::Error;
 
