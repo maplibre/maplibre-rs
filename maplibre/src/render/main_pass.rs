@@ -55,7 +55,12 @@ impl Node for MainPassNode {
             wgpu::RenderPassColorAttachment {
                 view: &texture.view,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
+                        a: 0.0,
+                    }),
                     store: StoreOp::Store,
                 },
                 resolve_target: Some(render_target.deref()),
@@ -64,7 +69,12 @@ impl Node for MainPassNode {
             wgpu::RenderPassColorAttachment {
                 view: render_target.deref(),
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
+                        a: 0.0,
+                    }),
                     store: StoreOp::Store,
                 },
                 resolve_target: None,
@@ -94,6 +104,8 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
+        // TODO: Automatically raise error when items get linearly too many (+1k)
+
         if let Some(mask_items) = world.resources.get::<RenderPhase<TileMaskItem>>() {
             log::trace!("RenderPhase<TileMaskItem>::size() = {}", mask_items.size());
             for item in mask_items {
@@ -103,6 +115,11 @@ impl Node for MainPassNode {
 
         if let Some(layer_items) = world.resources.get::<RenderPhase<LayerItem>>() {
             log::trace!("RenderPhase<LayerItem>::size() = {}", layer_items.size());
+
+            // Draw layers in style index order (painter's algorithm).
+            // This preserves the MapLibre GL JS rendering model where e.g.
+            // coastline (line) → countries-fill (fill) → countries-boundary (line)
+            // ensures fill covers inland portions of coastline.
             for item in layer_items {
                 item.draw_function.draw(&mut tracked_pass, world, item);
             }

@@ -7,11 +7,17 @@ use crate::{
         render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
-    tcs::tiles::Tile,
-    vector::{render_commands::DrawVectorTiles, VectorBufferPool},
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tile,
+    },
+    vector::{
+        render_commands::{DrawLineTiles, DrawVectorTiles},
+        VectorBufferPool,
+    },
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
+pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
     let Some((
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
@@ -24,7 +30,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
         &mut RenderPhase<LayerItem>,
     )>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     let buffer_pool_index = buffer_pool.index();
@@ -43,10 +49,19 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
 
             if let Some(layer_entries) = buffer_pool_index.get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
-                    // Draw tile
+                    // Choose fill vs line pipeline based on layer type
+                    let is_line = layer_entry.style_layer.type_ == "line";
+                    let draw_function: Box<dyn crate::render::render_phase::Draw<LayerItem>> =
+                        if is_line {
+                            Box::new(DrawState::<LayerItem, DrawLineTiles>::new())
+                        } else {
+                            Box::new(DrawState::<LayerItem, DrawVectorTiles>::new())
+                        };
+
                     layer_item_phase.add(LayerItem {
-                        draw_function: Box::new(DrawState::<LayerItem, DrawVectorTiles>::new()),
+                        draw_function,
                         index: layer_entry.style_layer.index,
+                        is_line,
                         style_layer: layer_entry.style_layer.id.clone(),
                         tile: Tile {
                             coords: layer_entry.coords,
@@ -54,7 +69,9 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
                         source_shape: source_shape.clone(),
                     });
                 }
-            };
+            }
         });
     }
+
+    Ok(())
 }

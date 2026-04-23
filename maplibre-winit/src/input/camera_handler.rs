@@ -20,7 +20,7 @@ pub struct CameraHandler {
 }
 
 impl UpdateState for CameraHandler {
-    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, dt: Duration) {
+    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, _dt: Duration) {
         if !self.is_active {
             return;
         }

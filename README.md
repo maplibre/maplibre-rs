@@ -39,15 +39,9 @@
   </h3>
 </div>
 
-## Project State
+## Project
 
-This project is in a proof-of-concept state. The proof of concept is done except for text rendering.
-The Rust ecosystem is suited very well for this project.
-
-In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
-next-gen mapping solution.
-
-📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+This project aims to develop a MapLibre Style Spec compliant renderer in Rust, using WebGPU for cross-platform support.
 
 ## Description
 
@@ -142,24 +136,10 @@ We established an RFC process which must be used to describe major changes to ma
 Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/book/rfc/0001-rfc-process.html).
 
 
-## Citing
-
-If you wish to cite this project in a scientific publication use the following format:
-
-```bibtex
-@article{maplibre_rs,
-	title        = {maplibre-rs: toward portable map renderers},
-	author       = {Ammann, M. and Drabble, A. and Ingensand, J. and Chapuis, B.},
-	year         = 2022,
-	journal      = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
-	volume       = {XLVIII-4/W1-2022},
-	pages        = {35--42},
-	doi          = {10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022},
-	url          = {https://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XLVIII-4-W1-2022/35/2022/}
-}
-```
-
 ## Acknowledgements
 
 The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
 forked into this project in order to have a solid and generic base.
+
+## Articles and talks about maplibre-rs
+- Aug. 2022 - [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)

@@ -126,20 +126,29 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn upload_pattern(&mut self, queue: &Q, view_proj: &ViewProjection) {
+    pub fn upload_pattern(
+        &mut self,
+        queue: &Q,
+        view_proj: &ViewProjection,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) {
         let mut buffer = Vec::with_capacity(self.view_tiles.len());
 
         let mut add_to_buffer = |shape: &mut TileShape| {
             shape.set_buffer_range(buffer.len() as u64);
             // TODO: Name `ShaderTileMetadata` is unfortunate here, because for raster rendering it actually is a layer
+            let transform = view_proj
+                .to_model_view_projection(shape.transform)
+                .downcast()
+                .into(); // TODO: move this calculation to update() fn above
             buffer.push(ShaderTileMetadata {
                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
-                transform: view_proj
-                    .to_model_view_projection(shape.transform)
-                    .downcast()
-                    .into(), // TODO: move this calculation to update() fn above
+                transform,
                 zoom_factor: shape.zoom_factor as f32,
+                viewport_width,
+                viewport_height,
             });
         };
 

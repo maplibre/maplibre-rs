@@ -70,15 +70,21 @@ mod tests {
     #[tokio::test]
     async fn test_tiles_available() {
         use super::StaticTileFetcher;
-        use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
+        use crate::{
+            coords::{WorldTileCoords, ZoomLevel},
+            style::source::TileAddressingScheme,
+        };
 
         const MUNICH_X: i32 = 17425;
         const MUNICH_Y: i32 = 11365;
         const MUNICH_Z: u8 = 15;
 
         let fetcher = StaticTileFetcher::new();
-        assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_err()); // World overview
-        let world_tile: WorldTileCoords = (MUNICH_X, MUNICH_Y, MUNICH_Z).into();
+        assert!(fetcher
+            .fetch_tile(&(0u32, 0u32, ZoomLevel::new(0)).into())
+            .await
+            .is_err()); // World overview
+        let world_tile: WorldTileCoords = (MUNICH_X, MUNICH_Y, ZoomLevel::new(MUNICH_Z)).into();
         assert!(fetcher
             .fetch_tile(&world_tile.into_tile(TileAddressingScheme::XYZ).unwrap())
             .await

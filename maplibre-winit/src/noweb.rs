@@ -19,7 +19,7 @@ use maplibre::{
     style::Style,
     window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError},
 };
-use winit::window::WindowAttributes;
+use winit::{dpi::Size, window::WindowAttributes};
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -87,7 +87,12 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
             .map_err(|_| WindowCreateError::EventLoop)?;
 
         let window = raw_event_loop
-            .create_window(WindowAttributes::new().with_title(&self.title))
+            .create_window(
+                WindowAttributes::new()
+                    .with_title(&self.title)
+                    // TODO make window size configurable
+                    .with_inner_size(Size::Logical(winit::dpi::LogicalSize::new(800.0, 800.0))),
+            )
             .map_err(|_| WindowCreateError::Window)?;
 
         Ok(Self::MapWindow {
@@ -133,7 +138,11 @@ pub fn run_headed_map<P>(
             renderer_builder,
             vec![
                 Box::new(RenderPlugin::default()),
+                Box::new(maplibre::background::BackgroundPlugin::default()),
                 Box::new(maplibre::vector::VectorPlugin::<
+                    maplibre::vector::DefaultVectorTransferables,
+                >::default()),
+                Box::new(maplibre::sdf::SdfPlugin::<
                     maplibre::vector::DefaultVectorTransferables,
                 >::default()),
                 // Box::new(maplibre::raster::RasterPlugin::<

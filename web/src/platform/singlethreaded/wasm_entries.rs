@@ -44,7 +44,8 @@ pub async fn singlethreaded_process_data(procedure_ptr: u32, input: String) -> R
         unsafe { mem::transmute(procedure_ptr) };
 
     let input = serde_json::from_str::<Input>(&input).map_err(|e| {
-        CallError::DeserializeInput(Box::new(e)) // TODO: This error e is not logged
+        log::error!("DeserializeInput error: {e}");
+        CallError::DeserializeInput(Box::new(e))
     })?;
 
     let context = PassingContext {

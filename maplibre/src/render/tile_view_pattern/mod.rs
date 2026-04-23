@@ -105,6 +105,15 @@ impl TileShape {
     }
 }
 
+impl Default for TileShape {
+    fn default() -> Self {
+        Self::new(
+            crate::coords::WorldTileCoords::default(),
+            crate::coords::Zoom::default(),
+        )
+    }
+}
+
 pub trait HasTile {
     fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool;
 

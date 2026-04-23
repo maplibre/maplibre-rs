@@ -52,6 +52,7 @@ serde_json.workspace = true
 flatbuffers.workspace = true
 
 image.workspace = true # FIXME: Remove image, use browser capabilities
+reqwest = { workspace = true, features = ["json"] }
 
 [build-dependencies]
 flatc-rust.workspace = true

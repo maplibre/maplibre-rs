@@ -3,13 +3,8 @@
     "outDir": "./dist/",
     "noImplicitAny": true,
     "module": "es2022",
-    "target": "es5",
+    "target": "es2022",
     "allowJs": true,
-    "moduleResolution": "node"
-  },
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
+    "moduleResolution": "bundler"
   }
 }

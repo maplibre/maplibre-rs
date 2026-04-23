@@ -18,7 +18,7 @@ use crate::{
     },
     style::layer::StyleLayer,
     tcs::world::World,
-    tessellation::OverAlignedVertexBuffer,
+    vector::tessellation::OverAlignedVertexBuffer,
 };
 
 // TODO: Too low values can cause a back-and-forth between unloading and loading layers
@@ -214,11 +214,11 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         (bytes, aligned_bytes)
     }
 
-    pub fn get_loaded_source_layers_at(&self, coords: WorldTileCoords) -> Option<HashSet<&str>> {
+    pub fn get_loaded_style_layers_at(&self, coords: WorldTileCoords) -> Option<HashSet<&str>> {
         self.index.get_layers(coords).map(|layers| {
             layers
                 .iter()
-                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) // TODO: Remove unwrap
+                .map(|entry| entry.style_layer.id.as_str())
                 .collect()
         })
     }

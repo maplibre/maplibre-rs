@@ -9,7 +9,7 @@ use crate::{
         INDEX_FORMAT,
     },
     tcs::world::World,
-    vector::{VectorBufferPool, VectorPipeline},
+    vector::{LinePipeline, VectorBufferPool, VectorPipeline},
 };
 
 pub struct SetVectorTilePipeline;
@@ -106,4 +106,21 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
     }
 }
 
+pub struct SetLineTilePipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetLineTilePipeline {
+    fn render<'w>(
+        world: &'w World,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<LinePipeline>>() else {
+            return RenderCommandResult::Failure;
+        };
+
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
+    }
+}
+
 pub type DrawVectorTiles = (SetVectorTilePipeline, DrawVectorTile);
+pub type DrawLineTiles = (SetLineTilePipeline, DrawVectorTile);

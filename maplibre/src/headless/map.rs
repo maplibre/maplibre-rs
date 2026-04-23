@@ -3,6 +3,7 @@ use std::{cell::RefCell, ops::Deref, rc::Rc};
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel, TILE_SIZE},
+    geojson::{process_geojson_features, GeoJsonTileRequest},
     headless::environment::HeadlessEnvironment,
     io::{
         apc::{Context, IntoMessage, Message, SendError},
@@ -14,12 +15,12 @@ use crate::{
     plugin::Plugin,
     render::{eventually::Eventually, view_state::ViewState, Renderer},
     schedule::{Schedule, Stage},
-    style::Style,
+    style::{layer::StyleLayer, Style},
     tcs::world::World,
     vector::{
-        process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
-        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
-        VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
+        process_vector_tile, AvailableVectorLayerBucket, DefaultVectorTransferables,
+        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerBucket,
+        VectorLayerBucketComponent, VectorTileRequest, VectorTransferables,
     },
 };
 
@@ -43,7 +44,7 @@ impl HeadlessMap {
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
             cgmath::Deg(0.0),
-            cgmath::Rad(0.6435011087932844),
+            cgmath::Rad(std::f64::consts::PI / 4.0),
         );
 
         let mut world = World::default();
@@ -81,22 +82,24 @@ impl HeadlessMap {
         tiles
             .spawn_mut((0, 0, ZoomLevel::default()).into())
             .expect("unable to spawn tile")
-            .insert(VectorLayersDataComponent {
+            .insert(VectorLayerBucketComponent {
                 done: true,
                 layers: layers
                     .into_iter()
                     .map(|layer| {
-                        VectorLayerData::Available(AvailableVectorLayerData {
+                        VectorLayerBucket::AvailableLayer(AvailableVectorLayerBucket {
                             coords: layer.coords,
                             source_layer: layer.layer_data.name,
+                            style_layer_id: layer.style_layer_id,
                             buffer: layer.buffer,
                             feature_indices: layer.feature_indices,
+                            feature_colors: layer.feature_colors,
                         })
                     })
                     .collect::<Vec<_>>(),
             });
 
-        self.schedule.run(context);
+        self.schedule.run(context).expect("schedule must not error");
 
         let resources = &mut context.world.resources;
         let tiles = &mut context.world.tiles;
@@ -126,7 +129,7 @@ impl HeadlessMap {
     pub async fn process_tile(
         &self,
         tile_data: Box<[u8]>,
-        source_layers: &[&str],
+        layer: &StyleLayer,
     ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
         let context = HeadlessContext::default();
         let mut processor =
@@ -137,10 +140,7 @@ impl HeadlessMap {
             &tile_data,
             VectorTileRequest {
                 coords: target_coords,
-                layers: source_layers
-                    .iter()
-                    .map(|layer| layer.to_string())
-                    .collect(),
+                layers: [layer].into_iter().cloned().collect(),
             },
             &mut processor,
         )
@@ -153,6 +153,46 @@ impl HeadlessMap {
             .collect::<Vec<_>>();
 
         layers
+    }
+
+    /// Process inline GeoJSON data for the given style layers and tile coordinates.
+    ///
+    /// Returns tessellated layers ready to be passed to [`Self::render_tile`].
+    pub fn process_geojson(
+        &mut self,
+        geojson_value: &serde_json::Value,
+        source_name: &str,
+        matching_layers: Vec<StyleLayer>,
+        target_coords: WorldTileCoords,
+        project: bool,
+    ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
+        let context = HeadlessContext::default();
+
+        process_geojson_features::<DefaultVectorTransferables, HeadlessContext>(
+            geojson_value,
+            GeoJsonTileRequest {
+                coords: target_coords,
+                layers: matching_layers,
+                source_name: source_name.to_owned(),
+                project,
+            },
+            &context,
+        )
+        .expect("Failed to process GeoJSON");
+
+        let messages = context.messages.deref().take();
+        messages
+            .into_iter()
+            .filter(|message| {
+                message.tag()
+                    == <DefaultVectorTransferables as VectorTransferables>::LayerTessellated::message_tag()
+            })
+            .map(|message| {
+                message.into_transferable::<
+                    <DefaultVectorTransferables as VectorTransferables>::LayerTessellated,
+                >()
+            })
+            .collect()
     }
 }
 

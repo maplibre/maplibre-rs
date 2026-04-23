@@ -23,8 +23,9 @@ extern crate core;
 // Export tile format
 pub use geozero::mvt::tile; // Used in transferables.rs in web/singlethreaded
 
-// Internal modules
-pub(crate) mod tessellation;
+pub mod euclid {
+    pub use lyon::geom::euclid::*;
+}
 
 pub mod context;
 pub mod coords;
@@ -46,6 +47,7 @@ pub mod environment;
 // Used for benchmarking
 pub mod benchmarking;
 
+pub mod background;
 pub mod event_loop;
 pub mod kernel;
 pub mod map;
@@ -54,5 +56,9 @@ pub mod tcs;
 
 // Plugins
 pub mod debug;
+pub mod geojson;
 pub mod raster;
 pub mod vector;
+
+mod legacy;
+pub mod sdf;

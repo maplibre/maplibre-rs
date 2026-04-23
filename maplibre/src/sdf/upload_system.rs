@@ -1,0 +1,151 @@
+//! Uploads data to the GPU which is needed for rendering.
+
+use std::iter;
+
+use crate::{
+    context::MapContext,
+    coords::ViewRegion,
+    render::{
+        eventually::{Eventually, Eventually::Initialized},
+        shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata},
+        tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
+        Renderer,
+    },
+    sdf::{SymbolBufferPool, SymbolLayerData, SymbolLayersDataComponent},
+    style::{layer::LayerPaint, Style},
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tiles,
+    },
+};
+
+pub fn upload_system(
+    MapContext {
+        world,
+        style,
+        view_state,
+        renderer: Renderer { queue, .. },
+        ..
+    }: &mut MapContext,
+) -> SystemResult {
+    let Some(Initialized(symbol_buffer_pool)) = world
+        .resources
+        .query_mut::<&mut Eventually<SymbolBufferPool>>()
+    else {
+        return Err(SystemError::Dependencies);
+    };
+
+    let view_region = view_state.create_view_region(
+        view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+        ViewStatePadding::Loose,
+    );
+
+    let zoom = view_state.zoom().level();
+
+    if let Some(view_region) = &view_region {
+        upload_symbol_layer(
+            symbol_buffer_pool,
+            queue,
+            &mut world.tiles,
+            style,
+            view_region,
+            zoom,
+        );
+    }
+
+    Ok(())
+}
+
+// TODO cleanup, duplicated
+fn upload_symbol_layer(
+    symbol_buffer_pool: &mut SymbolBufferPool,
+    queue: &wgpu::Queue,
+    tiles: &mut Tiles,
+    style: &Style,
+    view_region: &ViewRegion,
+    zoom: f32,
+) {
+    // Upload all tessellated layers which are in view
+    for coords in view_region.iter() {
+        let Some(vector_layers) = tiles.query_mut::<&SymbolLayersDataComponent>(coords) else {
+            continue;
+        };
+
+        let loaded_layers = symbol_buffer_pool
+            .get_loaded_style_layers_at(coords)
+            .unwrap_or_default();
+
+        let available_layers = vector_layers
+            .layers
+            .iter()
+            .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
+            .collect::<Vec<_>>();
+
+        for style_layer in &style.layers {
+            let layer_id = &style_layer.id;
+            let source_layer = match style_layer.source_layer.as_ref() {
+                Some(layer) => layer,
+                None => {
+                    log::trace!("style layer {layer_id} does not have a source layer");
+                    continue;
+                }
+            };
+
+            let Some(SymbolLayerData {
+                coords,
+                features,
+                //buffer,
+                new_buffer: buffer,
+                ..
+            }) = available_layers
+                .iter()
+                .find(|layer| source_layer.as_str() == layer.source_layer)
+            else {
+                continue;
+            };
+
+            // Per-vertex opacity metadata. Default to 1.0 (visible) so text renders
+            // even when collision detection features are not yet populated.
+            let metadata_count = if features.is_empty() {
+                buffer.buffer.vertices.len()
+            } else {
+                features
+                    .last()
+                    .map(|feature| feature.indices.end)
+                    .unwrap_or_default()
+            };
+            let feature_metadata = iter::repeat(SDFShaderFeatureMetadata { opacity: 1.0 })
+                .take(metadata_count)
+                .collect::<Vec<_>>();
+
+            // FIXME avoid uploading empty indices
+            if buffer.buffer.indices.is_empty() {
+                continue;
+            }
+
+            // Extract text-size from style (default 16.0 per MapLibre GL JS spec)
+            let text_size = match &style_layer.paint {
+                Some(LayerPaint::Symbol(paint)) => paint
+                    .text_size
+                    .as_ref()
+                    .map(|s| s.evaluate_at_zoom(zoom))
+                    .unwrap_or(16.0),
+                _ => 16.0,
+            };
+
+            log::debug!("Allocating geometry at {coords}");
+            symbol_buffer_pool.allocate_layer_geometry(
+                queue,
+                *coords,
+                style_layer.clone(),
+                buffer,
+                ShaderLayerMetadata {
+                    z_index: style_layer.index as f32,
+                    line_width: text_size, // repurposed as text_size for SDF pipeline
+                },
+                &feature_metadata,
+            );
+        }
+    }
+}

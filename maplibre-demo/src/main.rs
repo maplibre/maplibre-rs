@@ -17,6 +17,7 @@ struct Cli {
     command: Commands,
 }
 
+#[allow(dead_code)]
 fn parse_lat_long(env: &str) -> Result<LatLon, std::io::Error> {
     let split = env.split(',').collect::<Vec<_>>();
     if let (Some(latitude), Some(longitude)) = (split.first(), split.get(1)) {

@@ -8,7 +8,8 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
-    vector::{resource::BufferPool, VectorBufferPool, VectorPipeline},
+    tcs::system::{SystemError, SystemResult},
+    vector::{resource::BufferPool, LinePipeline, VectorBufferPool, VectorPipeline},
 };
 
 pub fn resource_system(
@@ -23,18 +24,19 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
-    let Some((buffer_pool, vector_pipeline)) = world.resources.query_mut::<(
+) -> SystemResult {
+    let Some((buffer_pool, vector_pipeline, line_pipeline)) = world.resources.query_mut::<(
         &mut Eventually<VectorBufferPool>,
         &mut Eventually<VectorPipeline>,
+        &mut Eventually<LinePipeline>,
     )>() else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     buffer_pool.initialize(|| BufferPool::from_device(device));
 
     vector_pipeline.initialize(|| {
-        let tile_shader = shaders::VectorTileShader {
+        let tile_shader = shaders::FillShader {
             format: surface.surface_format(),
         };
 
@@ -49,10 +51,37 @@ pub fn resource_system(
             false,
             surface.is_multisampling_supported(settings.msaa),
             false,
+            false,
         )
         .describe_render_pipeline()
         .initialize(device);
 
         VectorPipeline(pipeline)
     });
+
+    line_pipeline.initialize(|| {
+        let line_shader = shaders::LineShader {
+            format: surface.surface_format(),
+        };
+
+        let pipeline = TilePipeline::new(
+            "line_pipeline".into(),
+            *settings,
+            line_shader.describe_vertex(),
+            line_shader.describe_fragment(),
+            true,
+            false,
+            false,
+            false,
+            surface.is_multisampling_supported(settings.msaa),
+            false,
+            false,
+        )
+        .describe_render_pipeline()
+        .initialize(device);
+
+        LinePipeline(pipeline)
+    });
+
+    Ok(())
 }

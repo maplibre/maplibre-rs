@@ -31,3 +31,5 @@ cgmath.workspace = true
 instant.workspace = true
 log.workspace = true
 thiserror.workspace = true
+reqwest = { workspace = true, features = ["json"] }
+serde_json.workspace = true

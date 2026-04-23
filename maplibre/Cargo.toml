@@ -22,6 +22,7 @@ thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
 raster = ["image"]
+geojson = []
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
@@ -51,7 +52,7 @@ cgmath.workspace = true
 geo.workspace = true
 geo-types.workspace = true
 rstar.workspace = true
-geozero.workspace = true
+geozero = { workspace = true, features = ["with-geojson"] }
 tile-grid.workspace = true
 
 # Rendering
@@ -88,5 +89,14 @@ smallvec.workspace = true
 png = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
 
+# Text/glyphs
+prost = "0.13.1"
+
+# Symbols
+bitflags = { workspace = true }
+widestring = "1.1.0"
+guillotiere = "0.6.2"
+
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }
+prost-build = "0.13.1"

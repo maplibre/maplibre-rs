@@ -14,11 +14,15 @@ use maplibre::{
         AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
         RasterTransferables,
     },
-    render::ShaderVertex,
+    render::{
+        shaders::{ShaderSymbolVertex, ShaderSymbolVertexNew},
+        ShaderVertex,
+    },
+    sdf::{Feature, SymbolLayerData},
     tile::Layer,
     vector::{
-        AvailableVectorLayerData, LayerIndexed, LayerMissing, LayerTessellated,
-        MissingVectorLayerData, TileTessellated, VectorTransferables,
+        AvailableVectorLayerBucket, LayerIndexed, LayerMissing, LayerTessellated,
+        MissingVectorLayerBucket, SymbolLayerTessellated, TileTessellated, VectorTransferables,
     },
 };
 
@@ -26,7 +30,8 @@ use crate::platform::singlethreaded::{
     apc::WebMessageTag,
     transferables::{
         basic_generated::*, layer_indexed_generated::*, layer_missing_generated::*,
-        layer_raster_generated::*, layer_tessellated_generated::*, tile_tessellated_generated::*,
+        layer_raster_generated::*, layer_tessellated_generated::*,
+        symbol_layer_tessellated_generated::*, tile_tessellated_generated::*,
     },
 };
 
@@ -66,6 +71,14 @@ pub mod tile_tessellated_generated {
 pub mod layer_raster_generated {
     #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_raster_generated.rs"));
+}
+
+pub mod symbol_layer_tessellated_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(
+        env!("OUT_DIR"),
+        "/symbol_layer_tessellated_generated.rs"
+    ));
 }
 
 pub struct FlatBufferTransferable {
@@ -157,8 +170,8 @@ impl LayerMissing for FlatBufferTransferable {
         data.layer_name().expect("property must be set")
     }
 
-    fn to_layer(self) -> MissingVectorLayerData {
-        MissingVectorLayerData {
+    fn to_bucket(self) -> MissingVectorLayerBucket {
+        MissingVectorLayerBucket {
             source_layer: self.layer_name().to_owned(),
             coords: LayerMissing::coords(&self),
         }
@@ -182,11 +195,19 @@ impl LayerTessellated for FlatBufferTransferable {
         &WebMessageTag::LayerTessellated
     }
 
+    fn style_layer_id(&self) -> &str {
+        let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.style_layer_id()
+            .unwrap_or_else(|| data.layer_name().unwrap_or(""))
+    }
+
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
+        style_layer_id: String,
     ) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
@@ -201,6 +222,13 @@ impl LayerTessellated for FlatBufferTransferable {
         let indices = inner_builder.create_vector(&buffer.buffer.indices);
         let feature_indices = inner_builder.create_vector(&feature_indices);
         let layer_name = inner_builder.create_string(&layer_data.name);
+        let style_layer_id_fb = inner_builder.create_string(&style_layer_id);
+        // Flatten Vec<[f32; 4]> into Vec<f32> for FlatBuffer storage
+        let flat_colors: Vec<f32> = feature_colors
+            .iter()
+            .flat_map(|c| c.iter().copied())
+            .collect();
+        let feature_colors_fb = inner_builder.create_vector(&flat_colors);
 
         let mut builder = FlatLayerTessellatedBuilder::new(&mut inner_builder);
 
@@ -214,6 +242,8 @@ impl LayerTessellated for FlatBufferTransferable {
         builder.add_indices(indices);
         builder.add_feature_indices(feature_indices);
         builder.add_usable_indices(buffer.usable_indices);
+        builder.add_style_layer_id(style_layer_id_fb);
+        builder.add_feature_colors(feature_colors_fb);
         let root = builder.finish();
 
         inner_builder.finish(root, None);
@@ -235,7 +265,7 @@ impl LayerTessellated for FlatBufferTransferable {
         data.usable_indices() == 0
     }
 
-    fn to_layer(self) -> AvailableVectorLayerData {
+    fn to_bucket(self) -> AvailableVectorLayerBucket {
         let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
         let vertices = data
             .vertices()
@@ -246,11 +276,29 @@ impl LayerTessellated for FlatBufferTransferable {
         let indices = data.indices().unwrap();
         let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
         let usable_indices = data.usable_indices();
-        AvailableVectorLayerData {
+        let layer_name = data.layer_name().unwrap().to_owned();
+        let style_layer_id = data
+            .style_layer_id()
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| layer_name.clone());
+        // Reconstruct Vec<[f32; 4]> from the flat float array
+        let feature_colors: Vec<[f32; 4]> = data
+            .feature_colors()
+            .map(|fc| {
+                fc.iter()
+                    .collect::<Vec<f32>>()
+                    .chunks(4)
+                    .map(|c| [c[0], c[1], c[2], c[3]])
+                    .collect()
+            })
+            .unwrap_or_default();
+        AvailableVectorLayerBucket {
             coords: LayerTessellated::coords(&self),
-            source_layer: data.layer_name().unwrap().to_owned(),
+            source_layer: layer_name,
+            style_layer_id,
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
             feature_indices,
+            feature_colors,
         }
     }
 }
@@ -381,6 +429,150 @@ impl LayerRasterMissing for FlatBufferTransferable {
     }
 }
 
+impl SymbolLayerTessellated for FlatBufferTransferable {
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::SymbolLayerTessellated
+    }
+
+    fn build_from(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
+        _features: Vec<Feature>,
+        layer_data: Layer,
+        style_layer_id: String,
+    ) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+
+        let vertices = inner_builder.create_vector(
+            &buffer
+                .buffer
+                .vertices
+                .iter()
+                .map(|vertex| {
+                    FlatSymbolVertex::new(
+                        &vertex.position,
+                        &vertex.text_anchor,
+                        &vertex.tex_coords,
+                        &vertex.color,
+                        vertex.is_glyph,
+                    )
+                })
+                .collect::<Vec<_>>(),
+        );
+        let indices = inner_builder.create_vector(&buffer.buffer.indices);
+
+        let new_vertices = inner_builder.create_vector(
+            &new_buffer
+                .buffer
+                .vertices
+                .iter()
+                .map(|vertex| {
+                    FlatSymbolVertexNew::new(
+                        &vertex.a_pos_offset,
+                        &vertex.a_data,
+                        &vertex.a_pixeloffset,
+                    )
+                })
+                .collect::<Vec<_>>(),
+        );
+        let new_indices = inner_builder.create_vector(&new_buffer.buffer.indices);
+
+        let layer_name = inner_builder.create_string(&layer_data.name);
+        let style_layer_id_fb = inner_builder.create_string(&style_layer_id);
+
+        let mut builder = FlatSymbolLayerTessellatedBuilder::new(&mut inner_builder);
+
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        builder.add_layer_name(layer_name);
+        builder.add_vertices(vertices);
+        builder.add_indices(indices);
+        builder.add_usable_indices(buffer.usable_indices);
+        builder.add_new_vertices(new_vertices);
+        builder.add_new_indices(new_indices);
+        builder.add_new_usable_indices(new_buffer.usable_indices);
+        builder.add_style_layer_id(style_layer_id_fb);
+        let root = builder.finish();
+
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable {
+            tag: WebMessageTag::SymbolLayerTessellated,
+            data,
+            start,
+        }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.coords().unwrap().into()
+    }
+
+    fn is_empty(&self) -> bool {
+        let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.new_usable_indices() == 0
+    }
+
+    fn to_bucket(self) -> SymbolLayerData {
+        let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
+        let vertices = data
+            .vertices()
+            .unwrap()
+            .iter()
+            .map(|vertex| ShaderSymbolVertex {
+                position: vertex.position().into(),
+                text_anchor: vertex.text_anchor().into(),
+                tex_coords: vertex.tex_coords().into(),
+                color: vertex.color().into(),
+                is_glyph: vertex.is_glyph(),
+            });
+
+        let indices = data.indices().unwrap();
+        let usable_indices = data.usable_indices();
+
+        let new_vertices = data
+            .new_vertices()
+            .map(|v| {
+                v.iter()
+                    .map(|vertex| ShaderSymbolVertexNew {
+                        a_pos_offset: vertex.a_pos_offset().into(),
+                        a_data: vertex.a_data().into(),
+                        a_pixeloffset: vertex.a_pixeloffset().into(),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+
+        let new_indices: Vec<u32> = data
+            .new_indices()
+            .map(|i| i.iter().collect())
+            .unwrap_or_default();
+        let new_usable_indices = data.new_usable_indices();
+
+        let layer_name = data.layer_name().unwrap().to_owned();
+        let style_layer_id = data
+            .style_layer_id()
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| layer_name.clone());
+        SymbolLayerData {
+            coords: SymbolLayerTessellated::coords(&self),
+            source_layer: layer_name,
+            style_layer_id,
+            buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
+            new_buffer: OverAlignedVertexBuffer::from_iters(
+                new_vertices.into_iter(),
+                new_indices.into_iter(),
+                new_usable_indices,
+            ),
+            features: vec![],
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct FlatTransferables;
 
@@ -388,6 +580,7 @@ impl VectorTransferables for FlatTransferables {
     type TileTessellated = FlatBufferTransferable;
     type LayerMissing = FlatBufferTransferable;
     type LayerTessellated = FlatBufferTransferable;
+    type SymbolLayerTessellated = FlatBufferTransferable;
     type LayerIndexed = FlatBufferTransferable;
 }
 
