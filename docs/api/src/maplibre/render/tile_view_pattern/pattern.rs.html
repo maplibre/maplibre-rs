@@ -61,7 +61,7 @@
 <a href=#61 id=61 data-nosnippet>61</a>        world: <span class="kw-2">&amp;</span>World,
 <a href=#62 id=62 data-nosnippet>62</a>    ) -&gt; Vec&lt;ViewTile&gt; {
 <a href=#63 id=63 data-nosnippet>63</a>        <span class="kw">let </span><span class="kw-2">mut </span>view_tiles = Vec::with_capacity(<span class="self">self</span>.view_tiles.len());
-<a href=#64 id=64 data-nosnippet>64</a>        <span class="kw">let </span><span class="kw-2">mut </span>source_tiles = HashSet::new(); <span class="comment">// TODO: Optimization potential: Replace wit a bitmap, that allows false-negative matches
+<a href=#64 id=64 data-nosnippet>64</a>        <span class="kw">let </span><span class="kw-2">mut </span>source_tiles = HashSet::new(); <span class="comment">// TODO: Optimization potential: Replace with a bitmap, that allows false-negative matches
 <a href=#65 id=65 data-nosnippet>65</a>
 <a href=#66 id=66 data-nosnippet>66</a>        </span><span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
 <a href=#67 id=67 data-nosnippet>67</a>            <span class="kw">if </span>coords.build_quad_key().is_none() {
