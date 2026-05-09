@@ -717,7 +717,11 @@ fn shape_lines(
                         continue;
                     }
 
-                    let glyphs = glyph.expect("can't be none").as_ref().expect("can't be none");
+                    let glyphs = glyph
+                        .expect("can't be none")
+                        .as_ref()
+                        .expect("can't be none");
+                    metrics = glyphs.metrics;
                     metrics = glyphs.metrics;
                 }
                 advance = metrics.advance as f64;
