@@ -717,8 +717,8 @@ fn shape_lines(
                         continue;
                     }
 
-                    metrics =
-                        (glyph.expect("can't be none").as_ref().expect("can't be none")).metrics;
+                    let glyphs = glyph.expect("can't be none").as_ref().expect("can't be none");
+                    metrics = glyphs.metrics;
                 }
                 advance = metrics.advance as f64;
                 // We don't know the baseline, but since we're laying out
