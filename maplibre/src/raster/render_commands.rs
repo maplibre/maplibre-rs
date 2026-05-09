@@ -80,7 +80,7 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
             .buffer_range()
             .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
 
-        // FIXME tcs: I passin random data here right now, but instead we need the correct metadata here
+        // FIXME tcs: I passing random data here right now, but instead we need the correct metadata here
         pass.set_vertex_buffer(
             1,
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),

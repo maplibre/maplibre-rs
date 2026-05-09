@@ -41,7 +41,7 @@ mod resource_system;
 pub(crate) mod transferables;
 mod upload_system;
 
-// Public due to bechmarks
+// Public due to benchmarks
 pub mod tessellation;
 
 struct VectorPipeline(wgpu::RenderPipeline);

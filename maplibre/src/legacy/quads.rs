@@ -348,7 +348,7 @@ pub fn get_glyph_quads(
                 continue;
             }
 
-            // The rects have an addditional buffer that is not included in their size;
+            // The rects have an additional buffer that is not included in their size;
             let glyph_padding = 1.0;
             let mut rect_buffer = 3.0 + glyph_padding;
             let mut pixel_ratio = 1.0;

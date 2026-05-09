@@ -250,7 +250,7 @@ impl<K: OffscreenKernel> AsyncProcedureCall<K> for PassingAsyncProcedureCall {
         input: Input,
         procedure: AsyncProcedure<K, UsedContext>,
     ) -> Result<(), CallError> {
-        let procedure_ptr = procedure as *mut AsyncProcedure<K, UsedContext>; // TODO: Verify how these poitner are converted to pointers
+        let procedure_ptr = procedure as *mut AsyncProcedure<K, UsedContext>; // TODO: Verify how these pointer are converted to pointers
         let input = serde_json::to_string(&input).map_err(|e| CallError::Serialize(Box::new(e)))?;
 
         let message = js_sys::Object::from_entries(&js_sys::Array::of3(

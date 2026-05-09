@@ -65,9 +65,9 @@ Therefore, we should stick to the `web` output format.
 ## Required Features
 
 * WASM Bundling: Make the WASM binary available to users of the maplibre-rs library
-* WebWorker Bundling: Make the WebWorker available to users of the maplibre-rs library. This could also be achived by inlining.
+* WebWorker Bundling: Make the WebWorker available to users of the maplibre-rs library. This could also be achieved by inlining.
 * WebWorker Inlining: Inline the WebWorker bundle in the library bundle as a string.
-* Predictable Paths: Without predictable paths, it's difficult for users to reference the wasm file directly from the `node_modules` directory if requried.
+* Predictable Paths: Without predictable paths, it's difficult for users to reference the wasm file directly from the `node_modules` directory if required.
 
 
 ## Bundler Feature Comparison

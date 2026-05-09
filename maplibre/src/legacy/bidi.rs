@@ -15,7 +15,7 @@ pub fn apply_arabic_shaping(str: &U16String) -> U16String {
 
 // StyledText pairs each code point in a string with an integer indicating
 // the styling options to use for rendering that code point
-// The data structure is intended to accomodate the reordering/interleaving
+// The data structure is intended to accommodate the reordering/interleaving
 // of formatting that can happen when BiDi rearranges inputs
 /// maplibre/maplibre-native#4add9ea original name: StyledText
 pub type StyledText = (U16String, Vec<u8>);
