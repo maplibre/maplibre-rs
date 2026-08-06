@@ -1,6 +1,5 @@
 use std::{mem, rc::Rc, sync::OnceLock};
 
-use log::error;
 use maplibre::{
     benchmarking::io::{
         apc::{AsyncProcedure, Input, Message},

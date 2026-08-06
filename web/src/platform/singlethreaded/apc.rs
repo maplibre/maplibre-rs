@@ -1,7 +1,6 @@
 use std::{cell::RefCell, rc::Rc, vec::IntoIter};
 
 use js_sys::{ArrayBuffer, Uint8Array};
-use log::error;
 use maplibre::{
     environment::{OffscreenKernel, OffscreenKernelConfig},
     io::{
