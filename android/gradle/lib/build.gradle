@@ -36,7 +36,7 @@ cargo {
     targetDirectory = "${module}/../target"
     profile = "debug"
     // This should be in sync with the justfile
-    rustupChannel = "nightly-2025-07-01"
+    rustupChannel = "nightly-2026-08-06"
     
 
     features {
