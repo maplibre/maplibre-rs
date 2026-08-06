@@ -28,7 +28,7 @@
               pkgs.just
               pkgs.nodejs
               pkgs.mdbook
-              pkgs.wasm-bindgen-cli_0_2_108
+              pkgs.wasm-bindgen-cli_0_2_126 # Also update in Cargo.toml and CI scripts
               pkgs.cargo-criterion
               pkgs.nixpkgs-fmt
               # System dependencies
