@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#include <stdbool.h>
 
 //! Project version number for maplibre_rs.
 FOUNDATION_EXPORT double maplibre_rsVersionNumber;
@@ -9,3 +10,4 @@ FOUNDATION_EXPORT const unsigned char maplibre_rsVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <maplibre_rs/PublicHeader.h>
 
 void maplibre_apple_main();
+bool maplibre_apple_main_with_mbtiles(const char *archive_path, const char *style_json);

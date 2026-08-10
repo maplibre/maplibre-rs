@@ -31,7 +31,10 @@ pub trait Environment: 'static {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OffscreenKernelConfig {
+    /// The optional HTTP response cache directory.
     pub cache_directory: Option<String>,
+    /// The optional path for a local source client.
+    pub local_source_path: Option<String>,
 }
 
 pub trait OffscreenKernel: Send + Sync + 'static {

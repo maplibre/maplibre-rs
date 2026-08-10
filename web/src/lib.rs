@@ -92,6 +92,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
 
     let offscreen_kernel_config = OffscreenKernelConfig {
         cache_directory: None,
+        local_source_path: None,
     };
 
     #[cfg(target_feature = "atomics")]

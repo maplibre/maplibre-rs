@@ -6,14 +6,17 @@
 use std::{marker::PhantomData, path::PathBuf};
 
 use maplibre::{
-    environment::OffscreenKernelConfig,
+    environment::{OffscreenKernel, OffscreenKernelConfig},
     event_loop::EventLoop,
-    io::apc::SchedulerAsyncProcedureCall,
+    io::{apc::SchedulerAsyncProcedureCall, source_client::HttpClient},
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler,
-        ReqwestOffscreenKernelEnvironment,
+        http_client::ReqwestHttpClient,
+        mbtiles_client::{MbtilesClient, MbtilesError},
+        run_multithreaded,
+        scheduler::TokioScheduler,
+        MbtilesOffscreenKernelEnvironment, ReqwestOffscreenKernelEnvironment,
     },
     render::{builder::RendererBuilder, settings::WgpuSettings, RenderPlugin},
     style::Style,
@@ -111,21 +114,71 @@ pub fn run_headed_map<P>(
 ) where
     P: Into<PathBuf>,
 {
-    run_multithreaded(async {
-        type Environment<S, HC, APC> =
-            WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
+    let cache_path = cache_path.map(Into::into);
+    let client = ReqwestHttpClient::new(cache_path.clone());
+    run_headed_map_with_client::<_, ReqwestOffscreenKernelEnvironment>(
+        client,
+        OffscreenKernelConfig {
+            cache_directory: cache_path.map(|path| path.to_string_lossy().into_owned()),
+            local_source_path: None,
+        },
+        Style::default(),
+        window_config,
+        wgpu_settings,
+    );
+}
 
-        let cache_path = cache_path.map(|path| path.into());
-        let client = ReqwestHttpClient::new(cache_path.clone());
+/// Runs a headed map with one read-only MBTiles archive and the specified style.
+pub fn run_headed_map_with_mbtiles<P>(
+    archive_path: P,
+    style: Style,
+    window_config: WinitMapWindowConfig<()>,
+    wgpu_settings: WgpuSettings,
+) -> Result<(), MbtilesError>
+where
+    P: Into<PathBuf>,
+{
+    let archive_path = archive_path.into();
+    let client = MbtilesClient::open_blocking(&archive_path)?;
+    let source_path = archive_path
+        .to_str()
+        .ok_or_else(|| MbtilesError::NonUtf8Path {
+            path: archive_path.clone(),
+        })?
+        .to_string();
+    run_headed_map_with_client::<_, MbtilesOffscreenKernelEnvironment>(
+        client,
+        OffscreenKernelConfig {
+            cache_directory: None,
+            local_source_path: Some(source_path),
+        },
+        style,
+        window_config,
+        wgpu_settings,
+    );
+    Ok(())
+}
 
-        let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
+/// Runs a headed map with the specified source client and worker environment.
+pub fn run_headed_map_with_client<HC, K>(
+    client: HC,
+    offscreen_kernel_config: OffscreenKernelConfig,
+    style: Style,
+    window_config: WinitMapWindowConfig<()>,
+    wgpu_settings: WgpuSettings,
+) where
+    HC: HttpClient,
+    K: OffscreenKernel,
+{
+    run_multithreaded(async move {
+        type Environment<S, HC, K, APC> = WinitEnvironment<S, HC, K, APC, ()>;
+
+        let kernel: Kernel<Environment<_, _, K, _>> = KernelBuilder::new()
             .with_map_window_config(window_config)
             .with_http_client(client.clone())
             .with_apc(SchedulerAsyncProcedureCall::new(
                 TokioScheduler::new(),
-                OffscreenKernelConfig {
-                    cache_directory: cache_path.map(|path| path.to_str().unwrap().to_string()),
-                },
+                offscreen_kernel_config,
             ))
             .with_scheduler(TokioScheduler::new())
             .build();
@@ -133,7 +186,7 @@ pub fn run_headed_map<P>(
         let renderer_builder = RendererBuilder::new().with_wgpu_settings(wgpu_settings);
 
         let mut map = Map::new(
-            Style::default(),
+            style,
             kernel,
             renderer_builder,
             vec![

@@ -32,6 +32,8 @@ env_logger.workspace = true
 reqwest.workspace = true
 http-cache-reqwest.workspace = true
 reqwest-middleware.workspace = true
+flate2.workspace = true
+rusqlite.workspace = true
 tracing-tracy = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]

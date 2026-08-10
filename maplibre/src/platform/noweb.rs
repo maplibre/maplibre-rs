@@ -12,8 +12,11 @@ use crate::{
 };
 
 pub mod http_client;
+pub mod mbtiles_client;
 pub mod scheduler;
 pub mod trace;
+
+use mbtiles_client::MbtilesClient;
 
 pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
     tokio::runtime::Builder::new_multi_thread()
@@ -48,5 +51,24 @@ impl OffscreenKernel for ReqwestOffscreenKernelEnvironment {
         SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<String>(
             self.0.cache_directory.clone(),
         )))
+    }
+}
+
+/// Creates worker-side source clients for one installed MBTiles archive.
+pub struct MbtilesOffscreenKernelEnvironment(MbtilesClient);
+
+impl OffscreenKernel for MbtilesOffscreenKernelEnvironment {
+    type HttpClient = MbtilesClient;
+
+    fn create(config: OffscreenKernelConfig) -> Self {
+        let client = match config.local_source_path {
+            Some(path) => MbtilesClient::configured(path),
+            None => MbtilesClient::unavailable("the local source path is not configured"),
+        };
+        Self(client)
+    }
+
+    fn source_client(&self) -> SourceClient<Self::HttpClient> {
+        SourceClient::new(HttpSourceClient::new(self.0.clone()))
     }
 }

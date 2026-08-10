@@ -6,6 +6,8 @@ pub use noweb::run_multithreaded;
 #[cfg(feature = "trace")]
 pub use noweb::trace;
 #[cfg(not(target_arch = "wasm32"))]
+pub use noweb::MbtilesOffscreenKernelEnvironment;
+#[cfg(not(target_arch = "wasm32"))]
 pub use noweb::ReqwestOffscreenKernelEnvironment;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -15,6 +17,12 @@ mod noweb;
 pub mod http_client {
     #[cfg(not(target_arch = "wasm32"))]
     pub use super::noweb::http_client::*;
+}
+
+/// MBTiles client for non-web targets.
+pub mod mbtiles_client {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use super::noweb::mbtiles_client::*;
 }
 
 /// Scheduler for non-web targets.

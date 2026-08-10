@@ -181,7 +181,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         map.reset() // TODO: Instead of resetting the whole map (incl. the renderer) only reset the renderer
                     }
                     Event::Resumed => {
-                        // FIXME unimplemented!()
+                        map.window().request_redraw();
                     }
                     _ => {}
                 }

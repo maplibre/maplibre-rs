@@ -43,6 +43,7 @@ pub async fn create_headless_renderer(
             TokioScheduler::new(),
             OffscreenKernelConfig {
                 cache_directory: None,
+                local_source_path: None,
             },
         ))
         .with_scheduler(TokioScheduler::new())
