@@ -2,8 +2,10 @@ use crate::{
     raster::resource::RasterResources,
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult},
         resource::TrackedRenderPass,
+        tile_mesh::{GlobeTileMeshCache, TileMeshUsage},
         tile_view_pattern::WgpuTileViewPattern,
     },
     tcs::world::World,
@@ -16,13 +18,17 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(raster_resources)) =
-            world.resources.get::<Eventually<RasterResources>>()
+        let Some((Initialized(raster_resources), Initialized(projection_resources))) =
+            world.resources.query::<(
+                &Eventually<RasterResources>,
+                &Eventually<ProjectionGpuResources>,
+            )>()
         else {
             return RenderCommandResult::Failure;
         };
 
         pass.set_render_pipeline(raster_resources.pipeline());
+        pass.set_bind_group(0, projection_resources.bind_group(), &[]);
         RenderCommandResult::Success
     }
 }
@@ -44,7 +50,7 @@ impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
             return RenderCommandResult::Failure;
         };
 
-        pass.set_bind_group(0, bind_group, &[]);
+        pass.set_bind_group(1, bind_group, &[]);
         RenderCommandResult::Success
     }
 }
@@ -56,13 +62,21 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(tile_view_pattern)) =
-            world.resources.get::<Eventually<WgpuTileViewPattern>>()
+        let Some((Initialized(tile_view_pattern), tile_mesh_cache)) = world
+            .resources
+            .query::<(&Eventually<WgpuTileViewPattern>, &GlobeTileMeshCache)>()
         else {
             return RenderCommandResult::Failure;
         };
 
         let source_shape = &item.source_shape;
+        let Some(mesh) = tile_mesh_cache.get(
+            source_shape.coords(),
+            TileMeshUsage::Raster,
+            item.generate_borders,
+        ) else {
+            return RenderCommandResult::Failure;
+        };
 
         let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
@@ -71,8 +85,9 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
         let tile_view_pattern_buffer = source_shape
             .buffer_range()
             .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
+        pass.set_vertex_buffer(0, mesh.vertex_buffer().slice(..));
         pass.set_vertex_buffer(
-            0,
+            1,
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
 
@@ -82,12 +97,11 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
 
         // FIXME tcs: I passing random data here right now, but instead we need the correct metadata here
         pass.set_vertex_buffer(
-            1,
+            2,
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
-
-        const TILE_MASK_SHADER_VERTICES: u32 = 6;
-        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        pass.set_index_buffer(mesh.index_buffer().slice(..), mesh.index_format());
+        pass.draw_indexed(0..mesh.index_count(), 0, 0..1);
 
         RenderCommandResult::Success
     }

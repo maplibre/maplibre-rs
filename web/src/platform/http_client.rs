@@ -17,14 +17,19 @@ impl WHATWGFetchHttpClient {
 
         let request = Request::new_with_str_and_init(url, &opts)?;
 
-        // Get the global scope
+        // Tiles are fetched from workers, but TileJSON documents are resolved on the main thread
+        // before the first frame, so both global scopes must be able to fetch.
         let global = js_sys::global();
-        let scope = global
-            .dyn_into::<WorkerGlobalScope>()
-            .map_err(|_e| WebError::TypeError("Unable to cast to WorkerGlobalScope".into()))?;
+        let promise = match global.dyn_into::<WorkerGlobalScope>() {
+            Ok(scope) => scope.fetch_with_request(&request),
+            Err(_) => web_sys::window()
+                .ok_or_else(|| {
+                    WebError::TypeError("No worker or window scope to fetch from".into())
+                })?
+                .fetch_with_request(&request),
+        };
 
-        // Call fetch on global scope
-        let maybe_response = JsFuture::from(scope.fetch_with_request(&request)).await?;
+        let maybe_response = JsFuture::from(promise).await?;
         let response: Response = maybe_response
             .dyn_into()
             .map_err(|_e| WebError::TypeError("Unable to cast to Response".into()))?;

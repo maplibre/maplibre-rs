@@ -1,0 +1,25 @@
+{
+  "version": 8,
+  "name": "Globe demo",
+  "center": [0.0, 20.0],
+  "zoom": 1.5,
+  "bearing": 0.0,
+  "pitch": 0.0,
+  "projection": { "type": "globe" },
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "tiles": ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf"],
+      "minzoom": 0,
+      "maxzoom": 6,
+      "attribution": "MapLibre demotiles"
+    }
+  },
+  "layers": [
+    { "id": "background", "type": "background", "paint": { "background-color": "#a8d0f0" } },
+    { "id": "countries-fill", "type": "fill", "source": "maplibre", "source-layer": "countries", "paint": { "fill-color": "#e8dcb8" } },
+    { "id": "countries-boundary", "type": "line", "source": "maplibre", "source-layer": "countries", "paint": { "line-color": "#8a6d3b", "line-width": 1.0 } },
+    { "id": "geolines", "type": "line", "source": "maplibre", "source-layer": "geolines", "filter": ["all", ["!=", "name", "International Date Line"]], "paint": { "line-color": "#3b6fa8", "line-width": 1.0 } },
+    { "id": "countries-label", "type": "symbol", "source": "maplibre", "source-layer": "centroids", "minzoom": 2, "paint": { "text-field": "NAME", "text-size": 12 } }
+  ]
+}

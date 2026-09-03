@@ -12,7 +12,9 @@ use maplibre::{
 fn headless_render(c: &mut Criterion) {
     c.bench_function("headless_render", |b| {
         let (mut map, layer) = run_multithreaded(async {
-            let (kernel, renderer) = create_headless_renderer(1000, 1000, None).await;
+            let (kernel, renderer) = create_headless_renderer(1000, 1000, None)
+                .await
+                .unwrap_or_else(|error| panic!("Failed to create benchmark renderer: {error}"));
             let style = Style::default();
 
             let plugins: Vec<Box<dyn Plugin<_>>> = vec![
@@ -33,13 +35,17 @@ fn headless_render(c: &mut Criterion) {
                 .iter()
                 .find(|layer| layer.source_layer == Some("water".to_string()))
                 .expect("water layer must exist");
-            let tile = map.process_tile(tile, water_layer).await;
+            let tile = map
+                .process_tile(tile, water_layer)
+                .await
+                .unwrap_or_else(|error| panic!("Failed to process benchmark tile: {error}"));
 
             (map, tile)
         });
 
         b.iter(|| {
-            map.render_tile(layer.clone());
+            map.render_tile(layer.clone())
+                .unwrap_or_else(|error| panic!("Failed to render benchmark tile: {error}"));
         });
     });
 }

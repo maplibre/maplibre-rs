@@ -63,7 +63,7 @@ impl RasterResources {
         self.bound_textures.insert(
             *coords,
             device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &self.pipeline.get_bind_group_layout(0),
+                layout: &self.pipeline.get_bind_group_layout(1),
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,

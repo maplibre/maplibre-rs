@@ -2,6 +2,7 @@ use std::{collections::HashSet, marker::PhantomData};
 
 use crate::{
     coords::{ViewRegion, Zoom},
+    projection::renderer_data::tile_mercator_coordinates,
     render::{
         camera::ViewProjection,
         resource::{BackingBufferDescriptor, Queue},
@@ -149,6 +150,13 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 zoom_factor: shape.zoom_factor as f32,
                 viewport_width,
                 viewport_height,
+                tile_mercator_coords: tile_mercator_coordinates(
+                    shape
+                        .coords()
+                        .into_tile(crate::style::source::TileAddressingScheme::XYZ),
+                )
+                .into(),
+                clip_antimeridian: u32::from(u8::from(shape.coords().z) == 0),
             });
         };
 

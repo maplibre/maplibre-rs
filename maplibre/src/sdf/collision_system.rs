@@ -1,10 +1,8 @@
 use std::borrow::Cow;
 
-use cgmath::{Matrix3, Vector3};
-
 use crate::{
     context::MapContext,
-    coords::{EXTENT, TILE_SIZE},
+    coords::{TileCoords, WorldTileCoords, ZOOM_BOUNDS},
     euclid::Point2D,
     legacy::{
         buckets::symbol_bucket::PlacedSymbol,
@@ -16,11 +14,12 @@ use crate::{
     },
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::globe_camera_for_view,
         shaders::SDFShaderFeatureMetadata,
         tile_view_pattern::WgpuTileViewPattern,
         Renderer,
     },
-    sdf::{SymbolBufferPool, SymbolLayersDataComponent},
+    sdf::{Feature, SymbolBufferPool, SymbolLayersDataComponent},
     tcs::system::{System, SystemError, SystemResult},
 };
 
@@ -47,11 +46,25 @@ impl System for CollisionSystem {
         &mut self,
         MapContext {
             world,
+            style,
             view_state,
-            renderer: Renderer { device, queue, .. },
+            renderer: Renderer { queue, .. },
             ..
         }: &mut MapContext,
     ) -> SystemResult {
+        let uses_globe = style.projection.as_ref().is_some_and(|specification| {
+            specification
+                .projection_type
+                .uses_globe_rendering(view_state.zoom().value())
+        });
+        let globe_camera = if uses_globe {
+            Some(globe_camera_for_view(view_state).map_err(|error| {
+                tracing::error!(%error, "unable to project globe symbol collisions");
+                SystemError::Setup
+            })?)
+        } else {
+            None
+        };
         let Some((Initialized(tile_view_pattern), Initialized(symbol_buffer_pool))) =
             world.resources.query_mut::<(
                 &mut Eventually<WgpuTileViewPattern>,
@@ -85,6 +98,22 @@ impl System for CollisionSystem {
                         vec![SDFShaderFeatureMetadata { opacity: 1.0 }; metadata_count];
 
                     for feature in &layer.features {
+                        let is_occluded = globe_camera.as_ref().is_some_and(|camera| {
+                            canonical_tile(coords).is_none_or(|tile| {
+                                camera
+                                    .project_tile_coordinates(
+                                        f64::from(feature.text_anchor.x),
+                                        f64::from(feature.text_anchor.y),
+                                        tile,
+                                        0.0,
+                                    )
+                                    .is_occluded
+                            })
+                        });
+                        if is_occluded {
+                            set_feature_opacity(feature, layer, &mut feature_metadata, 0.0);
+                            continue;
+                        }
                         // calculate where tile is
 
                         let transform = coords.transform_for_zoom(view_state.zoom());
@@ -93,39 +122,13 @@ impl System for CollisionSystem {
                             .view_projection()
                             .to_model_view_projection(transform);
 
-                        let zoom_factor = view_state.zoom().scale_to_tile(&coords);
-
-                        let font_scale = 6.0;
-                        let scaling = Matrix3::from_cols(
-                            Vector3::new(zoom_factor * font_scale, 0.0, 0.0),
-                            Vector3::new(0.0, zoom_factor * font_scale, 0.0),
-                            Vector3::new(0.0, 0.0, 1.0),
-                        );
-
-                        let vec3 = Vector3::new(
-                            feature.bbox.max.x as f64,
-                            feature.bbox.max.y as f64,
-                            0.0f64,
-                        );
-                        let text_anchor = Vector3::new(
-                            feature.text_anchor.x as f64,
-                            feature.text_anchor.y as f64,
-                            0.0f64,
-                        );
-
-                        let shader = pos_matrix.get()
-                            * (scaling * (vec3 - text_anchor) + text_anchor).extend(1.0);
-                        let window = view_state.clip_to_window(&shader);
-
-                        //println!("{:?}", window);
-
                         let anchor_point =
                             Point2D::new(feature.bbox.min.x as f64, feature.bbox.min.y as f64); // TODO
 
                         let boxes = vec![CollisionBox {
                             anchor: anchor_point,
-                            x1: 0.0 * (EXTENT / TILE_SIZE),
-                            y1: 0. * (EXTENT / TILE_SIZE),
+                            x1: 0.0,
+                            y1: 0.0,
                             x2: (feature.bbox.max.x - feature.bbox.min.x) as f64, //* (EXTENT / TILE_SIZE),
                             y2: (feature.bbox.max.y - feature.bbox.min.y) as f64, // * (EXTENT / TILE_SIZE),
                             signed_distance_from_anchor: 0.0,
@@ -148,7 +151,7 @@ impl System for CollisionSystem {
                             },
                             along_line: false, // false if point, else true
                         };
-                        let (placed_text, is_offscreen) = collision_index.place_feature(
+                        let (placed_text, _is_offscreen) = collision_index.place_feature(
                             &collision_feature,
                             Point2D::zero(), // shift
                             &pos_matrix,
@@ -178,9 +181,9 @@ impl System for CollisionSystem {
                             false,
                             false,
                             false,
-                            None,                               // avoidEdges
-                            Some(|f: &IndexedSubfeature| true), // collisionGroupPredicate
-                            &mut projected_boxes,               // output
+                            None,                                      // avoidEdges
+                            Some(|_feature: &IndexedSubfeature| true), // collisionGroupPredicate
+                            &mut projected_boxes,                      // output
                         );
                         if feature.str.starts_with("Ette") {
                             //println!("{}", feature.str);
@@ -197,15 +200,9 @@ impl System for CollisionSystem {
                                 66,
                             );
 
-                            for index in feature.indices.clone() {
-                                let index = layer.new_buffer.buffer.indices[index] as usize;
-                                feature_metadata[index].opacity = 1.0;
-                            }
+                            set_feature_opacity(feature, layer, &mut feature_metadata, 1.0);
                         } else {
-                            for index in feature.indices.clone() {
-                                let index = layer.new_buffer.buffer.indices[index] as usize;
-                                feature_metadata[index].opacity = 0.0;
-                            }
+                            set_feature_opacity(feature, layer, &mut feature_metadata, 0.0);
 
                             //feature_metadata.extend(iter::repeat(SDFShaderFeatureMetadata { opacity: 0.0 }).take(feature.indices.len()))
                         }
@@ -234,3 +231,32 @@ impl System for CollisionSystem {
         Ok(())
     }
 }
+
+fn canonical_tile(coords: WorldTileCoords) -> Option<TileCoords> {
+    let tile_count = i32::try_from(ZOOM_BOUNDS[usize::from(u8::from(coords.z))]).ok()?;
+    if coords.y < 0 || coords.y >= tile_count {
+        return None;
+    }
+    Some(TileCoords {
+        x: coords.x.rem_euclid(tile_count) as u32,
+        y: coords.y as u32,
+        z: coords.z,
+    })
+}
+
+fn set_feature_opacity(
+    feature: &Feature,
+    layer: &crate::sdf::SymbolLayerData,
+    metadata: &mut [SDFShaderFeatureMetadata],
+    opacity: f32,
+) {
+    for index in feature.indices.clone() {
+        let vertex_index = layer.new_buffer.buffer.indices[index] as usize;
+        if let Some(vertex) = metadata.get_mut(vertex_index) {
+            vertex.opacity = opacity;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests;

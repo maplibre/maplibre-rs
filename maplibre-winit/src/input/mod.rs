@@ -14,8 +14,10 @@ use crate::input::{
 
 mod camera_handler;
 mod debug_handler;
+mod inertia;
 mod pan_handler;
 mod pinch_handler;
+pub mod projection;
 mod query_handler;
 mod shift_handler;
 mod zoom_handler;

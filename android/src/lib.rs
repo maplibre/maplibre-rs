@@ -2,7 +2,7 @@
 
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
-use maplibre::render::settings::WgpuSettings;
+use maplibre::{render::settings::WgpuSettings, style::Style};
 use maplibre_winit::{android_activity, run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(any(no_pendantic_os_check, target_os = "android")))]
@@ -21,6 +21,8 @@ pub fn android_main(app: android_activity::AndroidApp) {
             backends: Some(maplibre::render::settings::Backends::GL),
             ..WgpuSettings::default()
         },
+        Style::default(),
+        None,
     );
 }
 

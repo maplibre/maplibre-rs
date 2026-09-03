@@ -13,7 +13,7 @@ use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
 use crate::{
-    error::JSError,
+    error::{JSError, WebError},
     platform::{http_client::WHATWGFetchHttpClient, UsedOffscreenKernelEnvironment},
 };
 
@@ -84,8 +84,28 @@ type CurrentEnvironment = WinitEnvironment<
 
 pub type MapType = Map<CurrentEnvironment>;
 
+/// Parses a MapLibre style document handed over from JavaScript.
+fn parse_style(style_json: &str) -> Result<Style, JSError> {
+    let mut style: Style = serde_json::from_str(style_json)
+        .map_err(|error| WebError::GenericError(format!("invalid style: {error}").into()))?;
+    // Layer order becomes render order; index 0 is reserved for the depth clear.
+    for (index, layer) in style.layers.iter_mut().enumerate() {
+        layer.index = index as u32 + 1;
+    }
+    Ok(style)
+}
+
+/// Starts the map. `style_json` is a MapLibre style document; without it the built-in style is
+/// used.
 #[wasm_bindgen]
-pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
+pub async fn run_maplibre(
+    new_worker: js_sys::Function,
+    style_json: Option<String>,
+) -> Result<(), JSError> {
+    let style = match style_json.as_deref() {
+        Some(style_json) => parse_style(style_json)?,
+        None => Style::default(),
+    };
     let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::default());
@@ -125,7 +145,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         kernel_builder.build();
 
     let mut map: MapType = Map::new(
-        Style::default(),
+        style,
         kernel,
         RendererBuilder::new(),
         vec![

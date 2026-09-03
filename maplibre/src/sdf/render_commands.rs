@@ -1,6 +1,7 @@
 use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult, TranslucentItem},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
@@ -17,16 +18,22 @@ impl<P: PhaseItem> RenderCommand<P> for SetSymbolPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some((Initialized(GlyphTexture { ref bind_group, .. }), Initialized(symbol_pipeline))) =
-            world
-                .resources
-                .query::<(&Eventually<GlyphTexture>, &Eventually<SymbolPipeline>)>()
+        let Some((
+            Initialized(GlyphTexture { ref bind_group, .. }),
+            Initialized(symbol_pipeline),
+            Initialized(projection_resources),
+        )) = world.resources.query::<(
+            &Eventually<GlyphTexture>,
+            &Eventually<SymbolPipeline>,
+            &Eventually<ProjectionGpuResources>,
+        )>()
         else {
             return RenderCommandResult::Failure;
         };
 
-        pass.set_bind_group(0, bind_group, &[]);
         pass.set_render_pipeline(symbol_pipeline);
+        pass.set_bind_group(0, projection_resources.bind_group(), &[]);
+        pass.set_bind_group(1, bind_group, &[]);
         RenderCommandResult::Success
     }
 }
@@ -102,12 +109,12 @@ impl RenderCommand<TranslucentItem> for DrawSymbol {
                 .metadata()
                 .slice(entry.layer_metadata_buffer_range()),
         );
-        //pass.set_vertex_buffer(
-        //    3,
-        //    symbol_buffer_pool
-        //        .feature_metadata()
-        //        .slice(entry.feature_metadata_buffer_range()),
-        //);
+        pass.set_vertex_buffer(
+            3,
+            symbol_buffer_pool
+                .feature_metadata()
+                .slice(entry.feature_metadata_buffer_range()),
+        );
 
         pass.draw_indexed(entry.indices_range(), 0, 0..1);
         RenderCommandResult::Success

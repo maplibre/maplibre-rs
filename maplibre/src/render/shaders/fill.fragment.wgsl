@@ -4,8 +4,12 @@ struct Output {
 
 @fragment
 fn main(
-    @location(0) v_color: vec4<f32>
+    @location(0) v_color: vec4<f32>,
+    @location(4) horizon_distance: f32,
 ) -> Output {
+    if horizon_distance < 0.0 {
+        discard;
+    }
     // Basic fill shader fragment implementation.
     // Receives the per-vertex color/opacity and outputs it.
     // In native, opacity might be uniform or per-vertex.

@@ -51,6 +51,8 @@ pub struct LayerItem {
     pub index: u32,
     /// Whether this item uses the line pipeline (true) or fill pipeline (false).
     pub is_line: bool,
+    /// Whether projection-aware raster draws use the seam-expanding mesh variant.
+    pub generate_borders: bool,
 
     pub style_layer: String,
 
@@ -59,10 +61,10 @@ pub struct LayerItem {
 }
 
 impl PhaseItem for LayerItem {
-    type SortKey = u32;
+    type SortKey = (u32, bool);
 
     fn sort_key(&self) -> Self::SortKey {
-        self.index
+        (self.index, !self.generate_borders)
     }
 
     fn draw_function(&self) -> &dyn Draw<LayerItem> {
@@ -95,16 +97,20 @@ impl PhaseItem for TranslucentItem {
 pub struct TileMaskItem {
     pub draw_function: Box<dyn Draw<TileMaskItem>>,
     pub source_shape: TileShape,
+    pub generate_borders: bool,
 }
 
 impl PhaseItem for TileMaskItem {
     type SortKey = u32;
 
     fn sort_key(&self) -> Self::SortKey {
-        0
+        u32::from(!self.generate_borders)
     }
 
     fn draw_function(&self) -> &dyn Draw<TileMaskItem> {
         self.draw_function.as_ref()
     }
 }
+
+#[cfg(test)]
+mod tests;

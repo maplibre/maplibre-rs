@@ -162,6 +162,17 @@ impl ViewState {
         camera_to_center_distance
     }
 
+    /// Returns the vertical field of view.
+    pub fn field_of_view(&self) -> Rad<f64> {
+        self.perspective.fovy()
+    }
+
+    /// Returns the perspective-center offset from the viewport center.
+    pub fn center_offset(&self) -> Point2<f64> {
+        let center = self.edge_insets.center(self.width, self.height);
+        center - Vector2::new(self.width, self.height) / 2.0
+    }
+
     /// This function matches how maplibre-gl-js implements perspective and cameras at the time
     /// of the mapbox -> maplibre fork: [src/geo/transform.ts#L680](https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L680)
     #[tracing::instrument(skip_all)]

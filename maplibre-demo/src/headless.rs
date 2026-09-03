@@ -11,7 +11,13 @@ use maplibre::{
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
-    let (kernel, renderer) = create_headless_renderer(tile_size, None).await;
+    let (kernel, renderer) = match create_headless_renderer(tile_size, tile_size, None).await {
+        Ok(renderer) => renderer,
+        Err(error) => {
+            log::error!("Cannot create headless renderer: {error}");
+            return;
+        }
+    };
 
     let style = Style::default();
 
@@ -46,7 +52,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
 
         let tile = map.fetch_tile(coords).await.expect("Failed to fetch!");
 
-        let layers = map
+        let layers = match map
             .process_tile(
                 tile,
                 &requested_layers
@@ -54,8 +60,18 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
                     .map(|layer| layer.as_str())
                     .collect::<Vec<_>>(),
             )
-            .await;
+            .await
+        {
+            Ok(layers) => layers,
+            Err(error) => {
+                log::error!("Cannot process {coords}: {error}");
+                return;
+            }
+        };
 
-        map.render_tile(layers);
+        if let Err(error) = map.render_tile(layers) {
+            log::error!("Cannot render {coords}: {error}");
+            return;
+        }
     }
 }

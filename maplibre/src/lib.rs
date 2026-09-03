@@ -33,6 +33,7 @@ pub mod coords;
 pub mod headless;
 pub mod io;
 pub mod platform;
+pub mod projection;
 // TODO: Exposed because of camera
 pub mod render;
 pub mod style;

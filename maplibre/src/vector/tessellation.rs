@@ -3,7 +3,9 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use bytemuck::Pod;
-use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
+use geozero::{
+    error::GeozeroError, ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor,
+};
 use lyon::{
     geom,
     path::{path::Builder, Path},
@@ -14,7 +16,10 @@ use lyon::{
     },
 };
 
-use crate::render::ShaderVertex;
+use crate::{
+    projection::globe::subdivision::{subdivide_line_segment, subdivide_triangles},
+    render::ShaderVertex,
+};
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -125,6 +130,12 @@ pub struct ZeroTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
     path_builder: RefCell<Builder>,
     path_open: bool,
     is_point: bool,
+    contour_start: Option<[f32; 2]>,
+    contour_last: Option<[f32; 2]>,
+    subdivision_granularity: u32,
+    clip_x_to_tile: bool,
+    extend_to_north_pole: bool,
+    extend_to_south_pole: bool,
 
     pub buffer: VertexBuffers<ShaderVertex, I>,
 
@@ -155,11 +166,35 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
             current_index: 0,
             path_open: false,
             is_point: false,
+            contour_start: None,
+            contour_last: None,
+            subdivision_granularity: 1,
+            clip_x_to_tile: false,
+            extend_to_north_pole: false,
+            extend_to_south_pole: false,
         }
     }
 }
 
-impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTessellator<I> {
+impl<I> ZeroTessellator<I>
+where
+    I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex + Copy + Into<u32>,
+{
+    /// Configures geometry subdivision for a globe tile.
+    pub fn with_globe_subdivision(
+        mut self,
+        granularity: u32,
+        clip_x_to_tile: bool,
+        extend_to_north_pole: bool,
+        extend_to_south_pole: bool,
+    ) -> Self {
+        self.subdivision_granularity = granularity.max(1);
+        self.clip_x_to_tile = clip_x_to_tile;
+        self.extend_to_north_pole = extend_to_north_pole;
+        self.extend_to_south_pole = extend_to_south_pole;
+        self
+    }
+
     /// Stores current indices to the output. That way we know which vertices correspond to which
     /// feature in the output.
     fn update_feature_indices(&mut self) {
@@ -169,7 +204,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
         self.current_index = next_index;
     }
 
-    fn tessellate_strokes(&mut self) {
+    fn tessellate_strokes(&mut self) -> GeoResult<()> {
         let path_builder = self.path_builder.replace(Path::builder());
 
         StrokeTessellator::new()
@@ -178,18 +213,26 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
                 &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
                 &mut BuffersBuilder::new(&mut self.buffer, VertexConstructor {}),
             )
-            .unwrap(); // TODO: Remove unwrap
+            .map_err(|error| GeozeroError::Geometry(error.to_string()))?;
+        Ok(())
     }
 
-    fn end(&mut self, close: bool) {
+    fn end(&mut self, close: bool) -> GeoResult<()> {
         if self.path_open {
+            if close {
+                self.subdivide_closing_segment()?;
+            }
             self.path_builder.borrow_mut().end(close);
             self.path_open = false;
         }
+        self.contour_start = None;
+        self.contour_last = None;
+        Ok(())
     }
 
-    fn tessellate_fill(&mut self) {
+    fn tessellate_fill(&mut self) -> GeoResult<()> {
         let path_builder = self.path_builder.replace(Path::builder());
+        let index_start = self.buffer.indices.len();
 
         FillTessellator::new()
             .tessellate_path(
@@ -197,27 +240,67 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
                 &FillOptions::tolerance(DEFAULT_TOLERANCE).with_fill_rule(FillRule::NonZero),
                 &mut BuffersBuilder::new(&mut self.buffer, VertexConstructor {}),
             )
-            .unwrap(); // TODO: Remove unwrap
+            .map_err(|error| GeozeroError::Geometry(error.to_string()))?;
+        subdivide_triangles(
+            &mut self.buffer,
+            index_start,
+            crate::projection::globe::subdivision::FillSubdivisionOptions {
+                granularity: self.subdivision_granularity,
+                clip_x_to_tile: self.clip_x_to_tile,
+                extend_to_north_pole: self.extend_to_north_pole,
+                extend_to_south_pole: self.extend_to_south_pole,
+            },
+        )
+        .map_err(|error| GeozeroError::Geometry(error.to_string()))
+    }
+
+    fn append_coordinate(&mut self, coordinate: [f32; 2]) -> GeoResult<()> {
+        if let Some(previous) = self.contour_last {
+            let points = subdivide_line_segment(previous, coordinate, self.subdivision_granularity)
+                .map_err(|error| GeozeroError::Geometry(error.to_string()))?;
+            for point in points {
+                self.path_builder
+                    .borrow_mut()
+                    .line_to(geom::point(point[0], point[1]));
+            }
+        } else {
+            self.path_builder
+                .borrow_mut()
+                .begin(geom::point(coordinate[0], coordinate[1]));
+            self.contour_start = Some(coordinate);
+            self.path_open = true;
+        }
+        self.contour_last = Some(coordinate);
+        Ok(())
+    }
+
+    fn subdivide_closing_segment(&mut self) -> GeoResult<()> {
+        let (Some(start), Some(last)) = (self.contour_start, self.contour_last) else {
+            return Ok(());
+        };
+        let mut points = subdivide_line_segment(last, start, self.subdivision_granularity)
+            .map_err(|error| GeozeroError::Geometry(error.to_string()))?;
+        points.pop();
+        for point in points {
+            self.path_builder
+                .borrow_mut()
+                .line_to(geom::point(point[0], point[1]));
+        }
+        Ok(())
     }
 }
 
-impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProcessor
-    for ZeroTessellator<I>
+impl<I> GeomProcessor for ZeroTessellator<I>
+where
+    I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex + Copy + Into<u32>,
 {
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
         // log::info!("xy");
 
         if self.is_point {
             // log::info!("point");
-        } else if !self.path_open {
-            self.path_builder
-                .borrow_mut()
-                .begin(geom::point(x as f32, y as f32));
-            self.path_open = true;
         } else {
-            self.path_builder
-                .borrow_mut()
-                .line_to(geom::point(x as f32, y as f32));
+            self.append_coordinate([x as f32, y as f32])?;
         }
         Ok(())
     }
@@ -252,10 +335,10 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
     fn linestring_end(&mut self, tagged: bool, _idx: usize) -> GeoResult<()> {
         // log::info!("linestring_end");
 
-        self.end(false);
+        self.end(false)?;
 
         if tagged {
-            self.tessellate_strokes();
+            self.tessellate_strokes()?;
         }
         Ok(())
     }
@@ -267,7 +350,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
 
     fn multilinestring_end(&mut self, _idx: usize) -> GeoResult<()> {
         // log::info!("multilinestring_end");
-        self.tessellate_strokes();
+        self.tessellate_strokes()?;
         Ok(())
     }
 
@@ -279,12 +362,12 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
     fn polygon_end(&mut self, tagged: bool, _idx: usize) -> GeoResult<()> {
         // log::info!("polygon_end");
 
-        self.end(true);
+        self.end(true)?;
         if tagged {
             if self.is_line_layer {
-                self.tessellate_strokes();
+                self.tessellate_strokes()?;
             } else {
-                self.tessellate_fill();
+                self.tessellate_fill()?;
             }
         }
         Ok(())
@@ -299,9 +382,9 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
         // log::info!("multipolygon_end");
 
         if self.is_line_layer {
-            self.tessellate_strokes();
+            self.tessellate_strokes()?;
         } else {
-            self.tessellate_fill();
+            self.tessellate_fill()?;
         }
         Ok(())
     }
@@ -322,8 +405,9 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyP
     }
 }
 
-impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeatureProcessor
-    for ZeroTessellator<I>
+impl<I> FeatureProcessor for ZeroTessellator<I>
+where
+    I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex + Copy + Into<u32>,
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         self.update_feature_indices();
@@ -347,3 +431,6 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;

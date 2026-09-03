@@ -11,9 +11,20 @@ use crate::{
 
 #[derive(Error, Debug)]
 pub enum ProcessRasterError {
+    /// Source bytes could not be decoded as an image.
+    #[error("decoding raster tile failed")]
+    Decoding {
+        /// Underlying image decoder error.
+        #[source]
+        source: image::ImageError,
+    },
     /// Error during processing of the pipeline
     #[error("processing data in pipeline failed")]
-    Processing(Box<dyn std::error::Error>),
+    Processing {
+        /// Underlying context error.
+        #[source]
+        source: Box<dyn std::error::Error>,
+    },
 }
 
 pub struct RasterTileRequest {
@@ -26,7 +37,8 @@ pub fn process_raster_tile<T: RasterTransferables, C: Context>(
     context: &mut ProcessRasterContext<T, C>,
 ) -> Result<(), ProcessRasterError> {
     let coords = &tile_request.coords;
-    let img = image::load_from_memory(data).unwrap();
+    let img =
+        image::load_from_memory(data).map_err(|source| ProcessRasterError::Decoding { source })?;
     let rgba = img.to_rgba8();
 
     context.layer_raster_finished(coords, "raster".to_string(), rgba)?;
@@ -56,7 +68,9 @@ impl<T: RasterTransferables, C: Context> ProcessRasterContext<T, C> {
     ) -> Result<(), ProcessRasterError> {
         self.context
             .send_back(T::LayerRaster::build_from(*coords, layer_name, image_data))
-            .map_err(|e| ProcessRasterError::Processing(Box::new(e)))
+            .map_err(|source| ProcessRasterError::Processing {
+                source: Box::new(source),
+            })
     }
 }
 

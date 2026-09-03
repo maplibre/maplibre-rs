@@ -7,10 +7,13 @@ use crate::{
     environment::{Environment, OffscreenKernel},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
-        source_type::{SourceType, TessellateSource},
+        tile_sources::{clamp_to_max_zoom, source_layer_groups, source_max_zoom, TileKind},
     },
     kernel::Kernel,
-    render::{tile_view_pattern::DEFAULT_TILE_SIZE, view_state::ViewStatePadding},
+    render::{
+        projection::view_region_for_projection, tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
+    },
     sdf::SymbolLayersDataComponent,
     style::layer::StyleLayer,
     tcs::system::{System, SystemResult},
@@ -50,17 +53,27 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
         }: &mut MapContext,
     ) -> SystemResult {
         let _tiles = &mut world.tiles;
-        let view_region = view_state.create_view_region(
+        let view_region = view_region_for_projection(
+            style,
+            view_state,
             view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
             ViewStatePadding::Loose,
-        );
+        )
+        .map_err(|error| {
+            tracing::error!(%error, "unable to select vector request tiles");
+            crate::tcs::system::SystemError::Setup
+        })?;
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
-                // TODO: We also need to request tiles from layers above if we are over the maximum zoom level
+                let max_zoom = source_max_zoom(style, TileKind::Vector);
+                let mut requested = HashSet::new();
 
                 for coords in view_region.iter() {
-                    if coords.build_quad_key().is_none() {
+                    // Above the source maximum zoom the ancestor tile is fetched once and the
+                    // view pattern scales it into every descendant in view.
+                    let coords = clamp_to_max_zoom(coords, max_zoom);
+                    if coords.build_quad_key().is_none() || !requested.insert(coords) {
                         continue;
                     }
 
@@ -80,8 +93,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .insert(VectorLayerBucketComponent::default())
                         .insert(SymbolLayersDataComponent::default());
 
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
-                    log::info!("tile request started: {coords}");
+                    tracing::debug!(%coords, "tile request started");
 
                     self.kernel
                         .apc()
@@ -116,14 +128,21 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
             return Err(ProcedureError::IncompatibleInput);
         };
 
-        let requested_layers: HashSet<StyleLayer> = style.layers.iter().cloned().collect();
-
         let client = kernel.source_client();
+        let projection = style
+            .projection
+            .as_ref()
+            .map_or_else(Default::default, |specification| {
+                specification.projection_type.clone()
+            });
 
-        if !style.layers.is_empty() {
+        for group in source_layer_groups(&style, TileKind::Vector) {
+            let requested_layers: HashSet<StyleLayer> = group.layers.iter().cloned().collect();
+            if requested_layers.is_empty() {
+                continue;
+            }
             let context = context.clone();
-            let source = SourceType::Tessellate(TessellateSource::default());
-            match client.fetch(&coords, &source).await {
+            match client.fetch(&coords, &group.source).await {
                 Ok(data) => {
                     let data = data.into_boxed_slice();
 
@@ -133,13 +152,19 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
                         VectorTileRequest {
                             coords,
                             layers: requested_layers,
+                            projection: projection.clone(),
                         },
                         &mut pipeline_context,
                     )
                     .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
-                Err(e) => {
-                    log::error!("{e:?}");
+                Err(error) => {
+                    tracing::error!(
+                        %coords,
+                        source = ?group.source_name,
+                        %error,
+                        "vector tile fetch failed"
+                    );
                     for to_load in &requested_layers {
                         context
                             .send_back(<T as VectorTransferables>::LayerMissing::build_from(

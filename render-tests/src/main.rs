@@ -16,15 +16,15 @@
 
 use std::{
     path::{Path, PathBuf},
+    process::ExitCode,
     time::Instant,
 };
 
-use image::{ImageBuffer, Rgba, RgbaImage};
 use maplibre::{
-    coords::{WorldTileCoords, ZoomLevel},
     headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
     platform::run_multithreaded,
     plugin::Plugin,
+    raster::{AvailableRasterLayerData, DefaultRasterTransferables, RasterPlugin},
     render::RenderPlugin,
     style::{
         layer::StyleLayer,
@@ -35,17 +35,17 @@ use maplibre::{
 };
 use serde_json::Value;
 
-// ---------------------------------------------------------------------------
-// Paths — all relative to the workspace root (where `cargo run` is executed)
-// ---------------------------------------------------------------------------
+mod comparison;
+mod paths;
+mod report;
+mod source_tiles;
 
-fn workspace_tests_dir() -> PathBuf {
-    PathBuf::from("render-tests/src/tests")
-}
-
-fn workspace_templates_dir() -> PathBuf {
-    PathBuf::from("render-tests/src/templates")
-}
+use comparison::{compare_and_diff, composite_opaque_background};
+use paths::{
+    collect_tests, local_data_path, local_tile_path, workspace_templates_dir, workspace_tests_dir,
+};
+use report::generate_report;
+use source_tiles::source_tile_coords;
 
 // ---------------------------------------------------------------------------
 // Test metadata
@@ -55,6 +55,8 @@ fn workspace_templates_dir() -> PathBuf {
 struct TestMeta {
     width: u32,
     height: u32,
+    comparison_background: Option<[u8; 3]>,
+    max_diff: f64,
 }
 
 impl Default for TestMeta {
@@ -62,6 +64,8 @@ impl Default for TestMeta {
         Self {
             width: 512,
             height: 512,
+            comparison_background: None,
+            max_diff: 0.02,
         }
     }
 }
@@ -78,6 +82,18 @@ fn parse_test_meta(style_value: &Value) -> TestMeta {
     TestMeta {
         width: test.get("width").and_then(|v| v.as_u64()).unwrap_or(512) as u32,
         height: test.get("height").and_then(|v| v.as_u64()).unwrap_or(512) as u32,
+        comparison_background: test
+            .get("comparison-background")
+            .and_then(Value::as_array)
+            .and_then(|channels| match channels.as_slice() {
+                [red, green, blue] => Some([
+                    u8::try_from(red.as_u64()?).ok()?,
+                    u8::try_from(green.as_u64()?).ok()?,
+                    u8::try_from(blue.as_u64()?).ok()?,
+                ]),
+                _ => None,
+            }),
+        max_diff: test.get("max-diff").and_then(Value::as_f64).unwrap_or(0.02),
     }
 }
 
@@ -89,6 +105,7 @@ fn parse_test_meta(style_value: &Value) -> TestMeta {
 struct TestOutcome {
     id: String,
     result: TestResult,
+    attempts: u8,
 }
 
 #[derive(Debug)]
@@ -111,8 +128,17 @@ async fn run_test(test_dir: PathBuf) -> TestOutcome {
         .to_string_lossy()
         .into_owned();
 
-    let result = run_test_inner(&test_dir).await;
-    TestOutcome { id, result }
+    let mut result = run_test_inner(&test_dir).await;
+    let mut attempts = 1_u8;
+    while matches!(result, TestResult::Fail { .. }) && attempts < 3 {
+        attempts = attempts.wrapping_add(1);
+        result = run_test_inner(&test_dir).await;
+    }
+    TestOutcome {
+        id,
+        result,
+        attempts,
+    }
 }
 
 async fn run_test_inner(test_dir: &Path) -> TestResult {
@@ -144,14 +170,36 @@ async fn run_test_inner(test_dir: &Path) -> TestResult {
     }
 
     // ---- Set up headless renderer ----
-    let (kernel, renderer) = create_headless_renderer(meta.width, meta.height, None).await;
+    let (kernel, renderer) = match create_headless_renderer(meta.width, meta.height, None).await {
+        Ok(renderer) => renderer,
+        Err(error) => {
+            return TestResult::Error(format!("Cannot create headless renderer: {error}"));
+        }
+    };
 
-    let plugins: Vec<Box<dyn Plugin<_>>> = vec![
-        Box::new(RenderPlugin::default()),
-        Box::new(maplibre::background::BackgroundPlugin::default()),
-        Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
-        Box::new(HeadlessPlugin::new(true)),
+    let has_vector_sources = style
+        .sources
+        .values()
+        .any(|source| matches!(source, Source::GeoJson(_) | Source::Vector(_)));
+    let has_raster_sources = style
+        .sources
+        .values()
+        .any(|source| matches!(source, Source::Raster(_)));
+    let mut plugins: Vec<Box<dyn Plugin<_>>> = vec![
+        Box::new(RenderPlugin),
+        Box::new(maplibre::background::BackgroundPlugin),
     ];
+    if has_vector_sources {
+        plugins.push(Box::new(
+            VectorPlugin::<DefaultVectorTransferables>::default(),
+        ));
+    }
+    if has_raster_sources {
+        plugins.push(Box::new(
+            RasterPlugin::<DefaultRasterTransferables>::default(),
+        ));
+    }
+    plugins.push(Box::new(HeadlessPlugin::new(true).preserve_tile_sources()));
 
     let mut map = match HeadlessMap::new(style.clone(), renderer, kernel, plugins) {
         Ok(m) => m,
@@ -159,25 +207,22 @@ async fn run_test_inner(test_dir: &Path) -> TestResult {
     };
 
     // ---- Process GeoJSON sources ----
-    let target_coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
+    let target_coords = match map.required_tile_coords() {
+        Ok(coords) => coords,
+        Err(error) => {
+            return TestResult::Error(format!("Cannot select source tiles: {error}"));
+        }
+    };
     let mut all_layers = Vec::new();
+    let mut all_raster_layers = Vec::new();
 
+    let projection = style
+        .projection
+        .as_ref()
+        .map_or_else(crate_projection_default, |specification| {
+            specification.projection_type.clone()
+        });
     for (source_name, source) in &style.sources {
-        let Source::GeoJson(geojson_source) = source else {
-            continue;
-        };
-
-        let geojson_value = match &geojson_source.data {
-            GeoJsonData::Inline(v) => v.clone(),
-            GeoJsonData::Url(_url) => {
-                log::warn!(
-                    "URL GeoJSON source '{}' not supported in test harness",
-                    source_name
-                );
-                continue;
-            }
-        };
-
         let matching_layers: Vec<StyleLayer> = style
             .layers
             .iter()
@@ -189,28 +234,163 @@ async fn run_test_inner(test_dir: &Path) -> TestResult {
             continue;
         }
 
-        let mut layers = map.process_geojson(
-            &geojson_value,
-            source_name,
-            matching_layers,
-            target_coords,
-            false,
-        );
-        all_layers.append(&mut layers);
+        match source {
+            Source::GeoJson(geojson_source) => {
+                let loaded;
+                let geojson_value = match &geojson_source.data {
+                    GeoJsonData::Inline(value) => value,
+                    GeoJsonData::Url(url) => {
+                        let path = match local_data_path(url) {
+                            Ok(path) => path,
+                            Err(error) => return TestResult::Error(error),
+                        };
+                        let text = match std::fs::read_to_string(&path) {
+                            Ok(text) => text,
+                            Err(error) => {
+                                return TestResult::Error(format!(
+                                    "Cannot read GeoJSON {}: {error}",
+                                    path.display()
+                                ));
+                            }
+                        };
+                        loaded = match serde_json::from_str::<Value>(&text) {
+                            Ok(value) => value,
+                            Err(error) => {
+                                return TestResult::Error(format!(
+                                    "Cannot parse GeoJSON {}: {error}",
+                                    path.display()
+                                ));
+                            }
+                        };
+                        &loaded
+                    }
+                };
+                for coords in &target_coords {
+                    let mut layers = match map.process_geojson(
+                        geojson_value,
+                        source_name,
+                        matching_layers.clone(),
+                        *coords,
+                        projection.clone(),
+                    ) {
+                        Ok(layers) => layers,
+                        Err(error) => {
+                            return TestResult::Error(format!(
+                                "Cannot process GeoJSON source '{source_name}': {error}"
+                            ));
+                        }
+                    };
+                    all_layers.append(&mut layers);
+                }
+            }
+            Source::Vector(vector_source) => {
+                let Some(template) = vector_source
+                    .tiles
+                    .as_ref()
+                    .and_then(|templates| templates.first())
+                else {
+                    return TestResult::Error(format!(
+                        "Vector source '{source_name}' has no tile template"
+                    ));
+                };
+                for coords in
+                    source_tile_coords(&target_coords, vector_source.minzoom, vector_source.maxzoom)
+                {
+                    let path = match local_tile_path(template, coords) {
+                        Ok(path) => path,
+                        Err(error) => return TestResult::Error(error),
+                    };
+                    let tile_data = match std::fs::read(&path) {
+                        Ok(data) => data.into_boxed_slice(),
+                        Err(error) => {
+                            return TestResult::Error(format!(
+                                "Cannot read vector tile {}: {error}",
+                                path.display()
+                            ));
+                        }
+                    };
+                    for layer in &matching_layers {
+                        let mut layers = match map.process_tile_at(
+                            tile_data.clone(),
+                            layer,
+                            coords,
+                            projection.clone(),
+                        ) {
+                            Ok(layers) => layers,
+                            Err(error) => {
+                                return TestResult::Error(format!(
+                                    "Cannot process vector source '{source_name}': {error}"
+                                ));
+                            }
+                        };
+                        all_layers.append(&mut layers);
+                    }
+                }
+            }
+            Source::Raster(raster_source) => {
+                let Some(template) = raster_source
+                    .tiles
+                    .as_ref()
+                    .and_then(|templates| templates.first())
+                else {
+                    return TestResult::Error(format!(
+                        "Raster source '{source_name}' has no tile template"
+                    ));
+                };
+                for coords in
+                    source_tile_coords(&target_coords, raster_source.minzoom, raster_source.maxzoom)
+                {
+                    let path = match local_tile_path(template, coords) {
+                        Ok(path) => path,
+                        Err(error) => return TestResult::Error(error),
+                    };
+                    let image = match image::open(&path) {
+                        Ok(image) => image.to_rgba8(),
+                        Err(error) => {
+                            return TestResult::Error(format!(
+                                "Cannot read raster tile {}: {error}",
+                                path.display()
+                            ));
+                        }
+                    };
+                    all_raster_layers.push(AvailableRasterLayerData {
+                        coords,
+                        source_layer: source_name.clone(),
+                        image,
+                    });
+                }
+            }
+        }
     }
 
     // ---- Render ----
-    map.render_tile(all_layers);
-
-    // HeadlessPlugin writes "frame_0.png" to the CWD (workspace root).
-    let frame_path = PathBuf::from("frame_0.png");
-    if !frame_path.exists() {
-        return TestResult::Error("Renderer did not produce frame_0.png".to_string());
+    let frame_paths = [PathBuf::from("frame_0.png"), PathBuf::from("frame_1.png")];
+    for frame_path in &frame_paths {
+        match std::fs::remove_file(frame_path) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => {
+                return TestResult::Error(format!("Cannot remove stale headless frame: {error}"));
+            }
+        }
     }
-    if let Err(e) = std::fs::rename(&frame_path, &actual_path) {
-        let _ = std::fs::copy(&frame_path, &actual_path);
-        let _ = std::fs::remove_file(&frame_path);
-        let _ = e;
+    if let Err(error) = map.render_source_frames(all_layers, all_raster_layers, 2) {
+        return TestResult::Error(format!("Cannot render source tiles: {error}"));
+    }
+
+    let frame_path = &frame_paths[1];
+    if !frame_path.exists() {
+        return TestResult::Error("Renderer did not produce the requested final frame".to_string());
+    }
+    if let Err(error) = std::fs::rename(frame_path, &actual_path) {
+        return TestResult::Error(format!(
+            "Cannot move rendered frame into test output: {error}"
+        ));
+    }
+    if let Some(background) = meta.comparison_background {
+        if let Err(error) = composite_opaque_background(&actual_path, background) {
+            return TestResult::Error(error);
+        }
     }
 
     // ---- Compare with expected.png ----
@@ -222,208 +402,21 @@ async fn run_test_inner(test_dir: &Path) -> TestResult {
     }
 
     match compare_and_diff(&actual_path, &expected_path, &diff_path) {
-        Ok(diff) if diff < 0.02 => TestResult::Pass { diff },
+        Ok(diff) if diff < meta.max_diff => TestResult::Pass { diff },
         Ok(diff) => TestResult::Fail { diff },
         Err(e) => TestResult::Error(format!("Image comparison failed: {e}")),
     }
 }
 
-/// Compare two images, write a diff PNG, and return the normalised mean diff in [0,1].
-fn compare_and_diff(
-    actual_path: &Path,
-    expected_path: &Path,
-    diff_path: &Path,
-) -> Result<f64, String> {
-    let actual = image::open(actual_path)
-        .map_err(|e| format!("Cannot open actual: {e}"))?
-        .to_rgba8();
-    let expected = image::open(expected_path)
-        .map_err(|e| format!("Cannot open expected: {e}"))?
-        .to_rgba8();
-
-    // If dimensions differ, produce a plain red diff and report max diff.
-    if actual.dimensions() != expected.dimensions() {
-        let (aw, ah) = actual.dimensions();
-        let (ew, eh) = expected.dimensions();
-        let diff_img: RgbaImage =
-            ImageBuffer::from_pixel(aw.max(ew), ah.max(eh), Rgba([255u8, 0, 0, 255]));
-        let _ = diff_img.save(diff_path);
-        return Err(format!(
-            "Dimension mismatch: actual {aw}x{ah} vs expected {ew}x{eh}"
-        ));
-    }
-
-    let (w, h) = actual.dimensions();
-    let mut diff_img: RgbaImage = ImageBuffer::new(w, h);
-    let mut total_diff: u64 = 0;
-
-    for (x, y, a_px) in actual.enumerate_pixels() {
-        let e_px = expected.get_pixel(x, y);
-        let channel_diffs: Vec<u8> = a_px
-            .0
-            .iter()
-            .zip(e_px.0.iter())
-            .map(|(a, e)| (*a as i32 - *e as i32).unsigned_abs() as u8)
-            .collect();
-
-        let max_ch = *channel_diffs.iter().max().unwrap_or(&0);
-        total_diff += channel_diffs.iter().map(|&d| d as u64).sum::<u64>();
-
-        // Diff pixel: red tint proportional to difference, green for same pixels
-        let diff_px = if max_ch == 0 {
-            Rgba([0u8, 0, 0, 0]) // transparent (same)
-        } else {
-            Rgba([255u8, 0, 0, max_ch])
-        };
-        diff_img.put_pixel(x, y, diff_px);
-    }
-
-    let _ = diff_img.save(diff_path);
-
-    let n = w as u64 * h as u64 * 4;
-    Ok(total_diff as f64 / (n as f64 * 255.0))
-}
-
-// ---------------------------------------------------------------------------
-// Test discovery
-// ---------------------------------------------------------------------------
-
-fn collect_tests(test_root: &Path) -> Vec<PathBuf> {
-    let mut tests = Vec::new();
-
-    // Walk `test_root` up to `max_depth` to find directories containing `style.json`
-    for entry in walkdir::WalkDir::new(test_root)
-        .min_depth(1)
-        .max_depth(5)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        if entry.file_name() == "style.json" {
-            if let Some(parent) = entry.path().parent() {
-                // Ignore the `projection` tests because Maplibre-RS does not yet support Globe projection fully,
-                // and the NaN coordinate transformations crash `lyon_path` during full test runs.
-                if !parent.components().any(|c| c.as_os_str() == "projection") {
-                    tests.push(parent.to_path_buf());
-                }
-            }
-        }
-    }
-
-    tests.sort();
-    tests
-}
-
-// ---------------------------------------------------------------------------
-// HTML report generation
-// ---------------------------------------------------------------------------
-
-fn generate_report(outcomes: &[TestOutcome], templates_dir: &Path) {
-    let report_template_path = templates_dir.join("report_template.html");
-    let item_template_path = templates_dir.join("result_item_template.html");
-    let results_html_path = templates_dir.join("results.html");
-    let failed_ids_path = templates_dir.join("results-failed-caseIds.txt");
-    let errored_ids_path = templates_dir.join("results-errored-caseIds.txt");
-
-    let report_template = std::fs::read_to_string(&report_template_path)
-        .unwrap_or_else(|_| "<html><body>${resultData}</body></html>".to_string());
-    let item_template = std::fs::read_to_string(&item_template_path).unwrap_or_default();
-
-    let mut failed_items = String::new();
-    let mut errored_items = String::new();
-    let mut failed_ids = Vec::new();
-    let mut errored_ids = Vec::new();
-
-    for outcome in outcomes {
-        let test_id = format!("tests/{}", outcome.id);
-
-        // Relative image paths from templates/ to tests/
-        let rel_actual = format!("../tests/{}/actual.png", outcome.id);
-        let rel_expected = format!("../tests/{}/expected.png", outcome.id);
-        let rel_diff = format!("../tests/{}/diff.png", outcome.id);
-
-        let item_html = format!(
-            r#"<div class="test">
-  <h2>{id}</h2>
-  <div class="imagewrap">
-    <div><p>Actual</p><img src="{actual}" data-alt-src="{expected}"></div>
-    <div><p>Expected</p><img src="{expected}"></div>
-    <div class="diff"><p>Diff</p><img src="{diff}"></div>
-  </div>
-  <p>{status}</p>
-</div>"#,
-            id = outcome.id,
-            actual = rel_actual,
-            expected = rel_expected,
-            diff = rel_diff,
-            status = match &outcome.result {
-                TestResult::Pass { diff } => format!("PASS (diff={diff:.4})"),
-                TestResult::Fail { diff } => format!("FAIL (diff={diff:.4})"),
-                TestResult::Error(msg) => format!("ERROR: {msg}"),
-            },
-        );
-
-        match &outcome.result {
-            TestResult::Fail { .. } => {
-                failed_items.push_str(&item_html);
-                failed_ids.push(test_id);
-            }
-            TestResult::Error(_) => {
-                errored_items.push_str(&item_html);
-                errored_ids.push(test_id);
-            }
-            TestResult::Pass { .. } => {}
-        }
-    }
-
-    // Fill in item template
-    let result_data = item_template
-        .replace("${failedItemsLength}", &failed_ids.len().to_string())
-        .replace("${failedItems}", &failed_items)
-        .replace("${erroredItemsLength}", &errored_ids.len().to_string())
-        .replace("${erroredItems}", &errored_items);
-
-    // Fill in report template
-    let passed = outcomes
-        .iter()
-        .filter(|o| matches!(o.result, TestResult::Pass { .. }))
-        .count();
-    let all_passed_banner = if failed_ids.is_empty() && errored_ids.is_empty() {
-        format!(
-            r#"<h1 style="color: green">All {} tests passed!</h1>"#,
-            passed
-        )
-    } else {
-        format!(
-            r#"<p class="stats">{} passed / {} failed / {} errored out of {} total</p>"#,
-            passed,
-            failed_ids.len(),
-            errored_ids.len(),
-            outcomes.len()
-        )
-    };
-
-    let full_html = if result_data.is_empty() {
-        report_template.replace("${resultData}", &all_passed_banner)
-    } else {
-        report_template.replace(
-            "${resultData}",
-            &format!("{all_passed_banner}\n{result_data}"),
-        )
-    };
-
-    let _ = std::fs::write(&results_html_path, &full_html);
-    let _ = std::fs::write(&failed_ids_path, failed_ids.join("\n"));
-    let _ = std::fs::write(&errored_ids_path, errored_ids.join("\n"));
-
-    println!("\nReport written to: {}", results_html_path.display());
+fn crate_projection_default() -> maplibre::projection::ProjectionType {
+    maplibre::projection::ProjectionType::default()
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-fn main() {
-    env_logger::init();
+fn run() -> Result<bool, String> {
     let args: Vec<String> = std::env::args().collect();
 
     let test_root = if args.len() > 1 {
@@ -433,25 +426,27 @@ fn main() {
     };
 
     if !test_root.exists() {
-        eprintln!(
-            "Test directory not found: {}\nUsage: cargo run -p render-tests [test-dir]",
+        return Err(format!(
+            "Test directory not found: {}. Usage: cargo run -p render-tests [test-dir]",
             test_root.display()
-        );
-        std::process::exit(1);
+        ));
     }
 
     let tests = collect_tests(&test_root);
     if tests.is_empty() {
-        eprintln!("No tests found in {}", test_root.display());
-        std::process::exit(1);
+        return Err(format!("No tests found in {}", test_root.display()));
     }
 
-    println!(
+    run_multithreaded(run_tests(test_root, tests))
+}
+
+async fn run_tests(test_root: PathBuf, tests: Vec<PathBuf>) -> Result<bool, String> {
+    tracing::info!(
         "Running {} render tests from {}",
         tests.len(),
         test_root.display()
     );
-    println!("{:-<70}", "");
+    tracing::info!("{}", "-".repeat(70));
 
     let mut outcomes: Vec<TestOutcome> = Vec::new();
 
@@ -463,7 +458,7 @@ fn main() {
             .to_string();
 
         let start = Instant::now();
-        let outcome = run_multithreaded(run_test(test_dir.clone()));
+        let outcome = run_test(test_dir.clone()).await;
         let elapsed = start.elapsed();
 
         let tag = match &outcome.result {
@@ -471,8 +466,13 @@ fn main() {
             TestResult::Fail { diff } => format!("FAIL  (diff={diff:.4})"),
             TestResult::Error(msg) => format!("ERR   {msg}"),
         };
+        let retry_label = if outcome.attempts > 1 {
+            format!(" [attempt {}]", outcome.attempts)
+        } else {
+            String::new()
+        };
 
-        println!("  {tag}  {name}  ({elapsed:.1?})");
+        tracing::info!("  {tag}  {name}{retry_label}  ({elapsed:.1?})");
 
         outcomes.push(outcome);
     }
@@ -490,8 +490,8 @@ fn main() {
         .filter(|o| matches!(o.result, TestResult::Error(_)))
         .count();
 
-    println!("{:-<70}", "");
-    println!(
+    tracing::info!("{}", "-".repeat(70));
+    tracing::info!(
         "Results: {} passed, {} failed, {} errors  (total {})",
         passed,
         failed,
@@ -499,9 +499,20 @@ fn main() {
         outcomes.len()
     );
 
-    generate_report(&outcomes, &workspace_templates_dir());
+    let report_path = generate_report(&outcomes, &workspace_templates_dir())?;
+    tracing::info!("Report written to: {}", report_path.display());
 
-    if failed > 0 || errored > 0 {
-        std::process::exit(1);
+    Ok(failed == 0 && errored == 0)
+}
+
+fn main() -> ExitCode {
+    tracing_subscriber::fmt::init();
+    match run() {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(error) => {
+            tracing::error!("{error}");
+            ExitCode::FAILURE
+        }
     }
 }

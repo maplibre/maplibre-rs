@@ -12,7 +12,11 @@ use crate::{
         request_system::RequestSystem, resource::RasterResources, resource_system::resource_system,
         upload_system::upload_system,
     },
-    render::{eventually::Eventually, tile_view_pattern::ViewTileSources, RenderStageLabel},
+    render::{
+        eventually::Eventually,
+        tile_view_pattern::{HasTile, ViewTileSources},
+        RenderStageLabel,
+    },
     schedule::Schedule,
     tcs::{system::SystemContainer, tiles::TileComponent, world::World},
 };
@@ -56,7 +60,7 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
         world
             .resources
             .get_or_init_mut::<ViewTileSources>()
-            .add_resource_query::<&Eventually<RasterResources>>();
+            .add::<RasterTilesDone>();
 
         schedule.add_system_to_stage(
             RenderStageLabel::Extract,
@@ -94,3 +98,15 @@ pub struct RasterLayersDataComponent {
 }
 
 impl TileComponent for RasterLayersDataComponent {}
+
+#[derive(Default)]
+struct RasterTilesDone;
+
+impl HasTile for RasterTilesDone {
+    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+        world
+            .tiles
+            .query::<&RasterLayersDataComponent>(coords)
+            .is_some_and(|component| !component.layers.is_empty())
+    }
+}

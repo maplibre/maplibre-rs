@@ -19,8 +19,8 @@ path = "src/main.rs"
 maplibre = { path = "../maplibre", features = ["headless", "geojson", "thread-safe-futures"] }
 serde_json.workspace = true
 image.workspace = true
-log.workspace = true
-env_logger.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 walkdir.workspace = true
 serde = { workspace = true, features = ["derive"] }

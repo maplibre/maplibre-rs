@@ -3,7 +3,10 @@
 use async_trait::async_trait;
 use thiserror::Error;
 
-use crate::{coords::WorldTileCoords, io::source_type::SourceType};
+use crate::{
+    coords::WorldTileCoords,
+    io::source_type::{InvalidTileCoords, SourceType},
+};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
@@ -59,6 +62,11 @@ where
     ) -> Result<Vec<u8>, SourceFetchError> {
         self.http.fetch(coords, source_type).await
     }
+
+    /// Fetches a document that is not addressed by tile coordinates, such as TileJSON.
+    pub async fn fetch_url(&self, url: &str) -> Result<Vec<u8>, SourceFetchError> {
+        self.http.fetch_url(url).await
+    }
 }
 
 impl<HC> HttpSourceClient<HC>
@@ -76,8 +84,15 @@ where
         coords: &WorldTileCoords,
         source_type: &SourceType,
     ) -> Result<Vec<u8>, SourceFetchError> {
-        self.inner_client
-            .fetch(source_type.format(coords).as_str())
-            .await
+        let url = source_type
+            .format(coords)
+            .ok_or_else(|| SourceFetchError(Box::new(InvalidTileCoords { coords: *coords })))?;
+        tracing::debug!(%coords, %url, "fetching tile");
+        self.inner_client.fetch(url.as_str()).await
+    }
+
+    /// Fetches an arbitrary URL through the inner client.
+    pub async fn fetch_url(&self, url: &str) -> Result<Vec<u8>, SourceFetchError> {
+        self.inner_client.fetch(url).await
     }
 }

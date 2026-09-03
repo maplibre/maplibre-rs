@@ -6,6 +6,7 @@ use crate::{
     context::MapContext,
     coords::{LatLon, WorldCoords, Zoom},
     environment::Environment,
+    io::tile_json::resolve_tile_json_sources,
     kernel::Kernel,
     plugin::Plugin,
     render::{
@@ -101,15 +102,20 @@ where
 
                 let window_size = self.window.size();
 
+                resolve_tile_json_sources(style, self.kernel.source_client()).await;
+
                 let center = style.center.unwrap_or_default();
                 let initial_zoom = style.zoom.map(Zoom::new).unwrap_or_default();
-                let view_state = ViewState::new(
+                let mut view_state = ViewState::new(
                     window_size,
-                    WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), initial_zoom),
+                    WorldCoords::from_lat_lon(LatLon::new(center[1], center[0]), initial_zoom),
                     initial_zoom,
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                     cgmath::Rad(0.6435011087932844),
                 );
+                view_state
+                    .camera_mut()
+                    .set_roll(cgmath::Deg(style.bearing.unwrap_or_default()));
 
                 let mut world = World::default();
 

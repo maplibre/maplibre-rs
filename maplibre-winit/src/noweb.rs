@@ -104,10 +104,16 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     }
 }
 
+/// Opens a window and runs the map event loop until the window closes.
+///
+/// `max_frames` ends the loop after that many rendered frames, which lets a smoke test drive
+/// the real windowed pipeline without input.
 pub fn run_headed_map<P>(
     cache_path: Option<P>,
     window_config: WinitMapWindowConfig<()>,
     wgpu_settings: WgpuSettings,
+    style: Style,
+    max_frames: Option<u64>,
 ) where
     P: Into<PathBuf>,
 {
@@ -133,7 +139,7 @@ pub fn run_headed_map<P>(
         let renderer_builder = RendererBuilder::new().with_wgpu_settings(wgpu_settings);
 
         let mut map = Map::new(
-            Style::default(),
+            style,
             kernel,
             renderer_builder,
             vec![
@@ -162,7 +168,7 @@ pub fn run_headed_map<P>(
         map.window_mut()
             .take_event_loop()
             .expect("event loop is not available")
-            .run(map, None)
+            .run(map, max_frames)
             .expect("event loop creation failed")
     })
 }

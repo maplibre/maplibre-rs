@@ -184,7 +184,19 @@ pub struct BackgroundPaint {
     // TODO a lot
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// Coordinate frame used by fill and line paint translations.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, Eq, PartialEq)]
+pub enum TranslateAnchor {
+    /// Translation follows map axes.
+    #[default]
+    #[serde(rename = "map")]
+    Map,
+    /// Translation follows viewport axes.
+    #[serde(rename = "viewport")]
+    Viewport,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct FillPaint {
     #[serde(rename = "fill-color")]
     #[serde(
@@ -193,10 +205,16 @@ pub struct FillPaint {
     )]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fill_color: Option<StyleProperty<Color>>,
+    /// Translation in screen pixels before conversion to tile units.
+    #[serde(rename = "fill-translate", default)]
+    pub fill_translate: Option<[f32; 2]>,
+    /// Coordinate frame for `fill_translate`.
+    #[serde(rename = "fill-translate-anchor", default)]
+    pub fill_translate_anchor: TranslateAnchor,
     // TODO a lot
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct LinePaint {
     #[serde(rename = "line-color")]
     #[serde(
@@ -212,6 +230,12 @@ pub struct LinePaint {
         deserialize_with = "StyleProperty::<f32>::deserialize_f32_or_none"
     )]
     pub line_width: Option<StyleProperty<f32>>,
+    /// Translation in screen pixels before conversion to tile units.
+    #[serde(rename = "line-translate", default)]
+    pub line_translate: Option<[f32; 2]>,
+    /// Coordinate frame for `line_translate`.
+    #[serde(rename = "line-translate-anchor", default)]
+    pub line_translate_anchor: TranslateAnchor,
     // TODO a lot
 }
 
@@ -387,6 +411,16 @@ pub struct StyleLayer {
     pub paint: Option<LayerPaint>,
     pub source: Option<String>,
     pub source_layer: Option<String>,
+}
+
+impl StyleLayer {
+    /// Returns whether the layer is drawn at a continuous zoom, using the style-spec rule that
+    /// `minzoom` is inclusive and `maxzoom` exclusive.
+    pub fn is_visible_at(&self, zoom: f64) -> bool {
+        self.minzoom
+            .is_none_or(|minzoom| zoom >= f64::from(minzoom))
+            && self.maxzoom.is_none_or(|maxzoom| zoom < f64::from(maxzoom))
+    }
 }
 
 impl Serialize for StyleLayer {
@@ -568,6 +602,32 @@ impl Default for StyleLayer {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zoom_range_is_min_inclusive_max_exclusive() {
+        let mut layer = super::StyleLayer {
+            index: 0,
+            id: "labels".to_string(),
+            type_: "symbol".to_string(),
+            filter: None,
+            maxzoom: Some(6),
+            minzoom: Some(2),
+            metadata: None,
+            paint: None,
+            source: None,
+            source_layer: None,
+        };
+
+        assert!(!layer.is_visible_at(1.99));
+        assert!(layer.is_visible_at(2.0));
+        assert!(layer.is_visible_at(5.99));
+        assert!(!layer.is_visible_at(6.0));
+
+        layer.minzoom = None;
+        layer.maxzoom = None;
+        assert!(layer.is_visible_at(0.0));
+        assert!(layer.is_visible_at(24.0));
+    }
+
     use super::*;
 
     #[test]
@@ -675,5 +735,47 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn parses_fill_and_line_translation_properties() {
+        let style: crate::style::Style = serde_json::from_str(
+            r#"{
+                "version": 8,
+                "sources": {},
+                "layers": [
+                    {
+                        "id": "fill",
+                        "type": "fill",
+                        "paint": {
+                            "fill-color": "red",
+                            "fill-translate": [10, 50],
+                            "fill-translate-anchor": "viewport"
+                        }
+                    },
+                    {
+                        "id": "line",
+                        "type": "line",
+                        "paint": {
+                            "line-color": "blue",
+                            "line-translate": [2, 3]
+                        }
+                    }
+                ]
+            }"#,
+        )
+        .unwrap();
+
+        let Some(LayerPaint::Fill(fill)) = style.layers[0].paint.as_ref() else {
+            panic!("first layer should be a fill");
+        };
+        assert_eq!(fill.fill_translate, Some([10.0, 50.0]));
+        assert_eq!(fill.fill_translate_anchor, TranslateAnchor::Viewport);
+
+        let Some(LayerPaint::Line(line)) = style.layers[1].paint.as_ref() else {
+            panic!("second layer should be a line");
+        };
+        assert_eq!(line.line_translate, Some([2.0, 3.0]));
+        assert_eq!(line.line_translate_anchor, TranslateAnchor::Map);
     }
 }

@@ -9,3 +9,5 @@ pub mod source_client;
 pub mod source_type;
 #[cfg(feature = "embed-static-tiles")]
 pub mod static_tile_fetcher;
+pub mod tile_json;
+pub mod tile_sources;

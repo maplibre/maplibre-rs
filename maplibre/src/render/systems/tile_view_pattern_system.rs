@@ -4,6 +4,7 @@ use crate::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::view_region_for_projection,
         tile_view_pattern::{ViewTileSources, WgpuTileViewPattern, DEFAULT_TILE_SIZE},
         view_state::ViewStatePadding,
     },
@@ -12,7 +13,10 @@ use crate::{
 
 pub fn tile_view_pattern_system(
     MapContext {
-        view_state, world, ..
+        style,
+        view_state,
+        world,
+        ..
     }: &mut MapContext,
 ) -> SystemResult {
     let Some((Initialized(tile_view_pattern), view_tile_sources)) = world
@@ -23,10 +27,16 @@ pub fn tile_view_pattern_system(
     };
 
     // Create the tile view pattern only for tiles in view -> Tight
-    let view_region = view_state.create_view_region(
+    let view_region = view_region_for_projection(
+        style,
+        view_state,
         view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
         ViewStatePadding::Tight,
-    );
+    )
+    .map_err(|error| {
+        tracing::error!(%error, "unable to select tiles for rendering");
+        SystemError::Setup
+    })?;
 
     if let Some(view_region) = &view_region {
         let zoom = view_state.zoom();

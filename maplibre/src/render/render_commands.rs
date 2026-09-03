@@ -3,8 +3,10 @@
 use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult, TileMaskItem},
         resource::TrackedRenderPass,
+        tile_mesh::{GlobeTileMeshCache, TileMeshUsage},
         tile_view_pattern::WgpuTileViewPattern,
         MaskPipeline,
     },
@@ -18,10 +20,16 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<MaskPipeline>>() else {
+        let Some((Initialized(pipeline), Initialized(projection_resources))) =
+            world.resources.query::<(
+                &Eventually<MaskPipeline>,
+                &Eventually<ProjectionGpuResources>,
+            )>()
+        else {
             return RenderCommandResult::Failure;
         };
         pass.set_render_pipeline(pipeline);
+        pass.set_bind_group(0, projection_resources.bind_group(), &[]);
         RenderCommandResult::Success
     }
 }
@@ -33,13 +41,21 @@ impl RenderCommand<TileMaskItem> for DrawMask {
         item: &TileMaskItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(tile_view_pattern)) =
-            world.resources.get::<Eventually<WgpuTileViewPattern>>()
+        let Some((Initialized(tile_view_pattern), tile_mesh_cache)) = world
+            .resources
+            .query::<(&Eventually<WgpuTileViewPattern>, &GlobeTileMeshCache)>()
         else {
             return RenderCommandResult::Failure;
         };
 
         let tile_mask = &item.source_shape;
+        let Some(mesh) = tile_mesh_cache.get(
+            tile_mask.coords(),
+            TileMeshUsage::Stencil,
+            item.generate_borders,
+        ) else {
+            return RenderCommandResult::Failure;
+        };
 
         // Draw mask with stencil value of e.g. parent
         let reference = tile_mask.coords().stencil_reference_value_3d() as u32;
@@ -49,13 +65,13 @@ impl RenderCommand<TileMaskItem> for DrawMask {
         let tile_view_pattern_buffer = tile_mask
             .buffer_range()
             .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
+        pass.set_vertex_buffer(0, mesh.vertex_buffer().slice(..));
         pass.set_vertex_buffer(
-            0,
-            // Mask is of the requested shape
+            1,
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
-        const TILE_MASK_SHADER_VERTICES: u32 = 6;
-        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        pass.set_index_buffer(mesh.index_buffer().slice(..), mesh.index_format());
+        pass.draw_indexed(0..mesh.index_count(), 0, 0..1);
 
         RenderCommandResult::Success
     }

@@ -14,7 +14,12 @@ use crate::{
     },
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
+pub fn queue_system(
+    MapContext {
+        world, view_state, ..
+    }: &mut MapContext,
+) -> SystemResult {
+    let zoom = view_state.zoom().value();
     let Some((Initialized(tile_view_pattern), translucent_phase, Initialized(symbol_buffer_pool))) =
         world.resources.query_mut::<(
             &mut Eventually<WgpuTileViewPattern>,
@@ -35,7 +40,9 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
                 symbol_buffer_pool.index().get_layers(source_shape.coords())
             {
                 for layer_entry in layer_entries {
-                    // Draw tile
+                    if !layer_entry.style_layer.is_visible_at(zoom) {
+                        continue;
+                    }
                     translucent_phase.add(TranslucentItem {
                         draw_function: Box::new(DrawState::<TranslucentItem, DrawSymbols>::new()),
                         index: layer_entry.style_layer.index,

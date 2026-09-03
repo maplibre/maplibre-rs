@@ -25,14 +25,19 @@ use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
 pub mod layer;
+pub mod light;
+pub mod sky;
 pub mod source;
 
-use crate::style::{
-    layer::{
-        BackgroundPaint, FillPaint, LayerPaint, LinePaint, RasterPaint, StyleLayer, StyleProperty,
-        SymbolPaint,
+use crate::{
+    projection::ProjectionSpecification,
+    style::{
+        layer::{
+            BackgroundPaint, FillPaint, LayerPaint, LinePaint, RasterPaint, StyleLayer,
+            StyleProperty, SymbolPaint,
+        },
+        source::Source,
     },
-    source::Source,
 };
 
 /// Stores the style for a multi-layered map.
@@ -48,7 +53,14 @@ pub struct Style {
     pub layers: Vec<StyleLayer>,
     pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
     pub zoom: Option<f64>,
+    pub bearing: Option<f64>,
     pub pitch: Option<f64>,
+    #[serde(default)]
+    pub projection: Option<ProjectionSpecification>,
+    #[serde(default)]
+    pub light: Option<light::LightSpecification>,
+    #[serde(default)]
+    pub sky: Option<sky::SkySpecification>,
 }
 
 /// Default style for https://openmaptiles.org/schema/
@@ -78,7 +90,11 @@ impl Default for Style {
             metadata: Default::default(),
             sources: Default::default(),
             center: Some([50.85045, 4.34878]),
+            bearing: Some(0.0),
             pitch: Some(0.0),
+            projection: None,
+            light: None,
+            sky: None,
             zoom: Some(13.0),
             layers: vec![
                 StyleLayer {
@@ -109,6 +125,7 @@ impl Default for Style {
                         fill_color: Some(StyleProperty::Constant(
                             Color::from_str("#c8facc").unwrap(),
                         )),
+                        ..FillPaint::default()
                     })),
                     source: None,
                     source_layer: Some("park".to_string()),
@@ -125,6 +142,7 @@ impl Default for Style {
                         fill_color: Some(StyleProperty::Constant(
                             Color::from_str("#e0dfdf").unwrap(),
                         )),
+                        ..FillPaint::default()
                     })),
                     source: None,
                     source_layer: Some("landuse".to_string()),
@@ -141,6 +159,7 @@ impl Default for Style {
                         fill_color: Some(StyleProperty::Constant(
                             Color::from_str("#aedfa3").unwrap(),
                         )),
+                        ..FillPaint::default()
                     })),
                     source: None,
                     source_layer: Some("landcover".to_string()),
@@ -158,6 +177,7 @@ impl Default for Style {
                             Color::from_str("#ffffff").unwrap(),
                         )),
                         line_width: None,
+                        ..LinePaint::default()
                     })),
                     source: None,
                     source_layer: Some("transportation".to_string()),
@@ -174,6 +194,7 @@ impl Default for Style {
                         fill_color: Some(StyleProperty::Constant(
                             Color::from_str("#d9d0c9").unwrap(),
                         )),
+                        ..FillPaint::default()
                     })),
                     source: None,
                     source_layer: Some("building".to_string()),
@@ -190,6 +211,7 @@ impl Default for Style {
                         fill_color: Some(StyleProperty::Constant(
                             Color::from_str("#aad3df").unwrap(),
                         )),
+                        ..FillPaint::default()
                     })),
                     source: None,
                     source_layer: Some("water".to_string()),
@@ -206,6 +228,7 @@ impl Default for Style {
                         fill_color: Some(StyleProperty::Constant(
                             Color::from_str("#aad3df").unwrap(),
                         )),
+                        ..FillPaint::default()
                     })),
                     source: None,
                     source_layer: Some("waterway".to_string()),
@@ -223,6 +246,7 @@ impl Default for Style {
                             Color::from_str("black").unwrap(),
                         )),
                         line_width: None,
+                        ..LinePaint::default()
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),

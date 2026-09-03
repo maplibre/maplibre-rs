@@ -17,7 +17,14 @@ use crate::{
     },
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
+pub fn queue_system(
+    MapContext {
+        style,
+        view_state,
+        world,
+        ..
+    }: &mut MapContext,
+) -> SystemResult {
     let Some((
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
@@ -34,6 +41,11 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
     };
 
     let buffer_pool_index = buffer_pool.index();
+    let zoom = view_state.zoom().value();
+    let uses_globe = style
+        .projection
+        .as_ref()
+        .is_some_and(|specification| specification.projection_type.uses_globe_rendering(zoom));
 
     for view_tile in tile_view_pattern.iter() {
         let coords = &view_tile.coords();
@@ -41,14 +53,24 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
 
         // draw tile normal or the source e.g. parent or children
         view_tile.render(|source_shape| {
-            // Draw masks for all source_shapes
+            if uses_globe {
+                mask_phase.add(TileMaskItem {
+                    draw_function: Box::new(DrawState::<TileMaskItem, DrawMasks>::new()),
+                    source_shape: source_shape.clone(),
+                    generate_borders: true,
+                });
+            }
             mask_phase.add(TileMaskItem {
                 draw_function: Box::new(DrawState::<TileMaskItem, DrawMasks>::new()),
                 source_shape: source_shape.clone(),
+                generate_borders: false,
             });
 
             if let Some(layer_entries) = buffer_pool_index.get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
+                    if !layer_entry.style_layer.is_visible_at(zoom) {
+                        continue;
+                    }
                     // Choose fill vs line pipeline based on layer type
                     let is_line = layer_entry.style_layer.type_ == "line";
                     let draw_function: Box<dyn crate::render::render_phase::Draw<LayerItem>> =
@@ -62,6 +84,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
                         draw_function,
                         index: layer_entry.style_layer.index,
                         is_line,
+                        generate_borders: false,
                         style_layer: layer_entry.style_layer.id.clone(),
                         tile: Tile {
                             coords: layer_entry.coords,

@@ -9,7 +9,7 @@ pub type TileUrl = String;
 pub type TileJSONUrl = String;
 
 /// Tiles can be positioned using either the xyz coordinates or the TMS (Tile Map Service) protocol.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TileAddressingScheme {
     #[serde(rename = "xyz")]
     XYZ,
@@ -63,7 +63,9 @@ pub struct VectorSource {
     /// Array of URLs which can contain place holders like {x}, {y}, {z}.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tiles: Option<Vec<TileUrl>>,
-    // url: Option<TileJSONUrl>,
+    /// URL of a TileJSON document that supplies the tile URLs and zoom range.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<TileJSONUrl>,
     // TODO volatile
 }
 

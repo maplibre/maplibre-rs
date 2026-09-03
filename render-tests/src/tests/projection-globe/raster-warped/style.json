@@ -1,0 +1,50 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that raster tiles are not warped under globe projection. Exact way pixels get rasterized doesn't matter, but the pattern should not be tilted.",
+      "source": "maplibre-gl-js/test/integration/render/tests/projection/globe/raster-warped",
+      "max-diff": 0.04,
+      "comparison-note": "The upstream fixture explicitly treats exact rasterization as irrelevant; the invariant is an untilted, seam-free grid."
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    -178.59375,
+    84.92832092949962
+  ],
+  "zoom": 8,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "source": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/checkerboard.png"
+      ],
+      "minzoom": 8,
+      "maxzoom": 8,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "red"
+      }
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "source",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}
