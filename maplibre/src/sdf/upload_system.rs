@@ -7,6 +7,7 @@ use crate::{
     coords::ViewRegion,
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::view_region_for_projection,
         shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata},
         tile_view_pattern::DEFAULT_TILE_SIZE,
         view_state::ViewStatePadding,
@@ -36,10 +37,16 @@ pub fn upload_system(
         return Err(SystemError::Dependencies);
     };
 
-    let view_region = view_state.create_view_region(
+    let view_region = view_region_for_projection(
+        style,
+        view_state,
         view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
         ViewStatePadding::Loose,
-    );
+    )
+    .map_err(|error| {
+        tracing::error!(%error, "unable to select symbol upload tiles");
+        SystemError::Setup
+    })?;
 
     let zoom = view_state.zoom().level();
 
@@ -143,6 +150,7 @@ fn upload_symbol_layer(
                 ShaderLayerMetadata {
                     z_index: style_layer.index as f32,
                     line_width: text_size, // repurposed as text_size for SDF pipeline
+                    translate: [0.0; 2],
                 },
                 &feature_metadata,
             );

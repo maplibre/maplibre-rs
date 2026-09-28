@@ -7,7 +7,10 @@ import MultithreadedPoolWorker from './multithreaded/multithreaded-pool.worker.j
 // @ts-ignore esbuild plugin is handling this
 import PoolWorker from './singlethreaded/pool.worker.js';
 
-export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
+/**
+ * Starts the map. `styleJson` is a MapLibre style document; without it the built-in style is used.
+ */
+export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined, styleJson?: string) => {
     await checkWasmFeatures()
 
     let message = checkRequirements();
@@ -35,7 +38,7 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
             return workerPath ? new Worker(workerPath, {
                 type: 'module',
             }) : MultithreadedPoolWorker();
-        });
+        }, styleJson);
     } else {
         const memory = new WebAssembly.Memory({initial: 1024, shared: false})
         await maplibre.default(wasmPath, memory);
@@ -60,6 +63,6 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
             }
 
             return worker;
-        });
+        }, styleJson);
     }
 }

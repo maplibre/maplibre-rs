@@ -14,7 +14,6 @@ pub struct CameraHandler {
 
     start_delta_pitch: Option<Rad<f64>>,
     start_delta_roll: Option<Rad<f64>>,
-    start_delta_yaw: Option<Rad<f64>>,
 
     sensitivity: f64,
 }
@@ -38,11 +37,12 @@ impl UpdateState for CameraHandler {
                 let previous = *self.start_delta_roll.get_or_insert(camera.get_roll());
                 camera.set_roll(previous + delta);
             } else {
+                // Horizontal drag turns the bearing, as GL JS drag rotation does.
                 let delta: Rad<_> = (Deg(0.001 * self.sensitivity)
                     * (start_window_position.x - window_position.x))
                     .into();
-                let previous = *self.start_delta_yaw.get_or_insert(camera.get_yaw());
-                camera.set_yaw(previous + delta);
+                let previous = *self.start_delta_roll.get_or_insert(camera.get_roll());
+                camera.set_roll(previous + delta);
 
                 let delta: Rad<_> = (Deg(0.001 * self.sensitivity)
                     * (start_window_position.y - window_position.y))
@@ -63,7 +63,6 @@ impl CameraHandler {
             is_middle: false,
             start_delta_pitch: None,
             start_delta_roll: None,
-            start_delta_yaw: None,
             sensitivity,
         }
     }
@@ -98,7 +97,6 @@ impl CameraHandler {
             self.is_middle = false;
             self.start_window_position = None;
             self.window_position = None;
-            self.start_delta_yaw = None;
             self.start_delta_pitch = None;
             self.start_delta_roll = None;
         }

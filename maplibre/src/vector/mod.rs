@@ -110,7 +110,6 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
 
         resources
             .get_or_init_mut::<ViewTileSources>()
-            .add_resource_query::<&Eventually<VectorBufferPool>>()
             .add::<VectorTilesDone>();
 
         schedule.add_system_to_stage(

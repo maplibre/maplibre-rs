@@ -4,6 +4,7 @@ use crate::{
     debug::{DebugPipeline, TileDebugItem},
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
@@ -18,11 +19,17 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<DebugPipeline>>() else {
+        let Some((Initialized(pipeline), Initialized(projection_resources))) =
+            world.resources.query::<(
+                &Eventually<DebugPipeline>,
+                &Eventually<ProjectionGpuResources>,
+            )>()
+        else {
             return RenderCommandResult::Failure;
         };
 
         pass.set_render_pipeline(pipeline);
+        pass.set_bind_group(0, projection_resources.bind_group(), &[]);
         RenderCommandResult::Success
     }
 }
@@ -50,8 +57,9 @@ impl RenderCommand<TileDebugItem> for DrawDebugOutline {
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
 
-        const TILE_MASK_SHADER_VERTICES: u32 = 24;
-        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        // Four edges, each a strip of 32 quads with six vertices, generated in the shader.
+        const DEBUG_OUTLINE_VERTICES: u32 = 4 * 32 * 6;
+        pass.draw(0..DEBUG_OUTLINE_VERTICES, 0..1);
 
         RenderCommandResult::Success
     }

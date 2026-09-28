@@ -26,6 +26,20 @@ maplibre-rs project:
 cargo run -p maplibre-demo
 ```
 
+To view the bundled world style on a globe, or your own style, use the `headed` options:
+
+```bash
+cargo run -p maplibre-demo -- headed --globe
+cargo run -p maplibre-demo -- headed --style path/to/style.json --projection globe
+```
+
+Left-drag pans, the mouse wheel or `+`/`-` zooms around the pointer, right-drag rotates and tilts,
+and `W`/`A`/`S`/`D` or the arrow keys pan. `--frames <n>` closes the window after `n` frames.
+
+The web demo (`just web-lib build`, then `just web-demo start`) shows the MapLibre demotiles style
+on the globe by default. `?style=<url>` loads another style and `?projection=mercator` overrides
+the projection.
+
 ### Windows
 
 Windows has two additional prerequisites to be able to run. You will need CMake, Visual Studio C++ build tools and the

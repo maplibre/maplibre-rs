@@ -7,7 +7,7 @@ use crate::{
     environment::{Environment, OffscreenKernel},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
-        source_type::{RasterSource, SourceType},
+        tile_sources::{clamp_to_max_zoom, source_layer_groups, source_max_zoom, TileKind},
     },
     kernel::Kernel,
     raster::{
@@ -15,8 +15,10 @@ use crate::{
         transferables::{LayerRasterMissing, RasterTransferables},
         RasterLayersDataComponent,
     },
-    render::{tile_view_pattern::DEFAULT_TILE_SIZE, view_state::ViewStatePadding},
-    style::layer::LayerPaint,
+    render::{
+        projection::view_region_for_projection, tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
+    },
     tcs::system::{System, SystemResult},
 };
 
@@ -48,17 +50,27 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
             ..
         }: &mut MapContext,
     ) -> SystemResult {
-        let view_region = view_state.create_view_region(
+        let view_region = view_region_for_projection(
+            style,
+            view_state,
             view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
             ViewStatePadding::Loose,
-        );
+        )
+        .map_err(|error| {
+            tracing::error!(%error, "unable to select raster request tiles");
+            crate::tcs::system::SystemError::Setup
+        })?;
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
-                // TODO: We also need to request tiles from layers above if we are over the maximum zoom level
+                let max_zoom = source_max_zoom(style, TileKind::Raster);
+                let mut requested = HashSet::new();
 
                 for coords in view_region.iter() {
-                    if coords.build_quad_key().is_none() {
+                    // Above the source maximum zoom the ancestor tile is fetched once and the
+                    // view pattern scales it into every descendant in view.
+                    let coords = clamp_to_max_zoom(coords, max_zoom);
+                    if coords.build_quad_key().is_none() || !requested.insert(coords) {
                         continue;
                     }
 
@@ -77,8 +89,7 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
                         .expect("unable to spawn a raster tile")
                         .insert(RasterLayersDataComponent::default());
 
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
-                    log::info!("tile request started: {coords}");
+                    tracing::debug!(%coords, "tile request started");
 
                     self.kernel
                         .apc()
@@ -115,25 +126,11 @@ pub fn fetch_raster_apc<K: OffscreenKernel, T: RasterTransferables, C: Context +
             return Err(ProcedureError::IncompatibleInput);
         };
 
-        let raster_layers: HashSet<String> = style
-            .layers
-            .iter()
-            .filter_map(|layer| {
-                if matches!(layer.paint, Some(LayerPaint::Raster(_))) {
-                    layer.source_layer.clone()
-                } else {
-                    None
-                }
-            })
-            .collect();
-
         let client = kernel.source_client();
 
-        if !raster_layers.is_empty() {
+        for group in source_layer_groups(&style, TileKind::Raster) {
             let context = context.clone();
-            let source = SourceType::Raster(RasterSource::default());
-
-            match client.fetch(&coords, &source).await {
+            match client.fetch(&coords, &group.source).await {
                 Ok(data) => {
                     let data = data.into_boxed_slice();
 
@@ -142,8 +139,13 @@ pub fn fetch_raster_apc<K: OffscreenKernel, T: RasterTransferables, C: Context +
                     process_raster_tile(&data, RasterTileRequest { coords }, &mut process_context)
                         .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
-                Err(e) => {
-                    log::error!("{e:?}");
+                Err(error) => {
+                    tracing::error!(
+                        %coords,
+                        source = ?group.source_name,
+                        %error,
+                        "raster tile fetch failed"
+                    );
 
                     context
                         .send_back(<T as RasterTransferables>::LayerRasterMissing::build_from(

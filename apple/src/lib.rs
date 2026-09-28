@@ -1,6 +1,6 @@
 #![deny(unused_imports)]
 
-use maplibre::render::settings::WgpuSettings;
+use maplibre::{render::settings::WgpuSettings, style::Style};
 use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(any(no_pendantic_os_check, target_os = "macos", target_os = "ios")))]
@@ -17,5 +17,7 @@ pub fn maplibre_apple_main() {
             backends: Some(maplibre::render::settings::Backends::all()),
             ..WgpuSettings::default()
         },
+        Style::default(),
+        None,
     );
 }

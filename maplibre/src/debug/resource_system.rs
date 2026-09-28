@@ -3,7 +3,8 @@ use crate::{
     context::MapContext,
     debug::DebugPipeline,
     render::{
-        eventually::Eventually,
+        eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         resource::{RenderPipeline, TilePipeline},
         shaders,
         shaders::Shader,
@@ -25,10 +26,10 @@ pub fn resource_system(
         ..
     }: &mut MapContext,
 ) -> SystemResult {
-    let Some(debug_pipeline) = world
-        .resources
-        .query_mut::<&mut Eventually<DebugPipeline>>()
-    else {
+    let Some((debug_pipeline, Initialized(projection_resources))) = world.resources.query_mut::<(
+        &mut Eventually<DebugPipeline>,
+        &mut Eventually<ProjectionGpuResources>,
+    )>() else {
         return Err(SystemError::Dependencies);
     };
 
@@ -53,7 +54,7 @@ pub fn resource_system(
             false,
         )
         .describe_render_pipeline()
-        .initialize(device);
+        .initialize_with_prefix_layouts(device, &[projection_resources.bind_group_layout()]);
         DebugPipeline(pipeline)
     });
 

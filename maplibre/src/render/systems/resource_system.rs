@@ -6,6 +6,7 @@ use crate::{
     context::MapContext,
     render::{
         eventually::Eventually,
+        projection::ProjectionGpuResources,
         resource::{BackingBufferDescriptor, RenderPipeline, Texture, TilePipeline},
         settings::Msaa,
         shaders,
@@ -38,10 +39,13 @@ impl System for ResourceSystem {
             ..
         }: &mut MapContext,
     ) -> SystemResult {
-        let Some((tile_view_pattern, mask_pipeline)) = world.resources.query_mut::<(
-            &mut Eventually<WgpuTileViewPattern>,
-            &mut Eventually<MaskPipeline>,
-        )>() else {
+        let Some((tile_view_pattern, mask_pipeline, projection_resources)) =
+            world.resources.query_mut::<(
+                &mut Eventually<WgpuTileViewPattern>,
+                &mut Eventually<MaskPipeline>,
+                &mut Eventually<ProjectionGpuResources>,
+            )>()
+        else {
             return Err(SystemError::Dependencies);
         };
 
@@ -50,6 +54,9 @@ impl System for ResourceSystem {
         let size = surface.size();
 
         surface.reconfigure(device);
+
+        let projection_resources =
+            projection_resources.initialize(|| ProjectionGpuResources::new(device));
 
         state
             .render_target
@@ -131,7 +138,7 @@ impl System for ResourceSystem {
                 false,
             )
             .describe_render_pipeline()
-            .initialize(device);
+            .initialize_with_prefix_layouts(device, &[projection_resources.bind_group_layout()]);
             MaskPipeline(pipeline)
         });
 

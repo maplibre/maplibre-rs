@@ -9,6 +9,7 @@ use thiserror::Error;
 use crate::{
     coords::{WorldTileCoords, EXTENT},
     io::apc::{Context, SendError},
+    projection::{globe::subdivision::granularity_for_zoom, ProjectionType},
     sdf::{tessellation::TextTessellator, tessellation_new::TextTessellatorNew},
     style::layer::{LayerPaint, StyleLayer},
     vector::{
@@ -35,17 +36,15 @@ pub struct ProjectingTessellator<T> {
     tile_x: i32,
     tile_y: i32,
     zoom: u8,
-    project: bool,
 }
 
 impl<T> ProjectingTessellator<T> {
-    pub fn new(coords: WorldTileCoords, project: bool, inner: T) -> Self {
+    pub fn new(coords: WorldTileCoords, inner: T) -> Self {
         Self {
             inner,
             tile_x: coords.x,
             tile_y: coords.y,
             zoom: u8::from(coords.z),
-            project,
         }
     }
 
@@ -67,18 +66,16 @@ impl<T> ProjectingTessellator<T> {
 
 impl<T: GeomProcessor> GeomProcessor for ProjectingTessellator<T> {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
-        if x.is_nan() || y.is_nan() {
-            println!(
-                "ProjectingTessellator received NaN Input! x={}, y={}, idx={}",
-                x, y, idx
-            );
+        if !x.is_finite() || !y.is_finite() {
+            return Err(geozero::error::GeozeroError::Geometry(format!(
+                "non-finite GeoJSON coordinate ({x}, {y}) at index {idx}"
+            )));
         }
         let (tx, ty) = self.project(x, y);
         if !tx.is_finite() || !ty.is_finite() {
-            println!(
-                "ProjectingTessellator output non-finite! lon={}, lat={} -> tx={}, ty={}",
-                x, y, tx, ty
-            );
+            return Err(geozero::error::GeozeroError::Geometry(format!(
+                "GeoJSON coordinate ({x}, {y}) projected to ({tx}, {ty})"
+            )));
         }
         self.inner.xy(tx, ty, idx)
     }
@@ -186,8 +183,8 @@ pub struct GeoJsonTileRequest {
     pub layers: Vec<StyleLayer>,
     /// Name of the GeoJSON source (used to match style layers by `source` field).
     pub source_name: String,
-    /// If true, applies Web Mercator projection. Tests use false.
-    pub project: bool,
+    /// Projection controlling tessellation density and antimeridian policy.
+    pub projection: ProjectionType,
 }
 
 /// Process inline GeoJSON data and tessellate features for each matching style layer.
@@ -211,7 +208,7 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
         let matches_source = style_layer
             .source
             .as_deref()
-            .map_or(false, |s| s == request.source_name);
+            .is_some_and(|source| source == request.source_name);
         if !matches_source {
             continue;
         }
@@ -223,7 +220,24 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
 
         match paint {
             LayerPaint::Fill(_) | LayerPaint::Line(_) | LayerPaint::Background(_) => {
-                let mut tessellator = ZeroTessellator::<IndexDataType>::default();
+                let zoom = u8::from(coords.z);
+                let granularity = match paint {
+                    LayerPaint::Fill(_) => granularity_for_zoom(128, 2, zoom),
+                    LayerPaint::Line(_) => granularity_for_zoom(512, 0, zoom),
+                    _ => 1,
+                };
+                let use_globe_geometry = request.projection.uses_globe_rendering(f64::from(zoom));
+                let mut tessellator = if use_globe_geometry {
+                    let last_tile = i64::from(crate::coords::ZOOM_BOUNDS[usize::from(zoom)]) - 1;
+                    ZeroTessellator::<IndexDataType>::default().with_globe_subdivision(
+                        granularity,
+                        zoom == 0,
+                        coords.y == 0,
+                        i64::from(coords.y) == last_tile,
+                    )
+                } else {
+                    ZeroTessellator::<IndexDataType>::default()
+                };
                 match paint {
                     LayerPaint::Fill(p) => tessellator.style_property = p.fill_color.clone(),
                     LayerPaint::Line(p) => {
@@ -236,8 +250,7 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                     _ => {}
                 }
 
-                let mut projecting =
-                    ProjectingTessellator::new(coords, request.project, tessellator);
+                let mut projecting = ProjectingTessellator::new(coords, tessellator);
 
                 let mut geojson_src = geozero::geojson::GeoJson(json_str.as_str());
                 if let Err(e) = geojson_src.process(&mut projecting) {
@@ -278,14 +291,13 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                     .map_err(ProcessGeoJsonError::SendError)?;
             }
             LayerPaint::Symbol(symbol_paint) => {
-                let mut tessellator = TextTessellator::<IndexDataType>::default();
+                let tessellator = TextTessellator::<IndexDataType>::default();
                 let text_field = symbol_paint
                     .text_field
                     .clone()
                     .unwrap_or_else(|| "name".to_string());
-                let mut tessellator_new = TextTessellatorNew::new(text_field);
-                let mut projecting =
-                    ProjectingTessellator::new(coords, request.project, tessellator_new);
+                let tessellator_new = TextTessellatorNew::new(text_field);
+                let mut projecting = ProjectingTessellator::new(coords, tessellator_new);
 
                 let mut geojson_src = geozero::geojson::GeoJson(json_str.as_str());
                 if let Err(e) = geojson_src.process(&mut projecting) {
@@ -334,3 +346,6 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;

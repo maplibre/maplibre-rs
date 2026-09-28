@@ -1,10 +1,9 @@
-use std::collections::HashSet;
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     benchmarking::io::static_tile_fetcher::StaticTileFetcher,
     coords::{TileCoords, ZoomLevel},
     io::apc::{Context, IntoMessage, SendError},
+    projection::ProjectionType,
     style::{source::TileAddressingScheme, Style},
     vector::{
         process_vector_tile, DefaultVectorTransferables, ProcessVectorContext, VectorTileRequest,
@@ -36,16 +35,18 @@ fn bench_process_vector_tile(c: &mut Criterion) {
             .into_boxed_slice();
 
         b.iter(|| {
-            let _ = process_vector_tile(
+            process_vector_tile(
                 &data,
                 VectorTileRequest {
                     coords: MUNICH_COORDS
                         .into_world_tile(TileAddressingScheme::XYZ)
                         .unwrap(),
                     layers: Style::default().layers.iter().cloned().collect(),
+                    projection: ProjectionType::Mercator,
                 },
                 &mut ProcessVectorContext::<DefaultVectorTransferables, _>::new(DummyContext),
-            );
+            )
+            .ok();
         })
     });
 }

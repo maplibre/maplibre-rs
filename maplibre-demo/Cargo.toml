@@ -17,8 +17,9 @@ trace = ["maplibre/trace"]
 headless = ["maplibre/headless"]
 
 [dependencies]
-env_logger.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 maplibre = { path = "../maplibre", version = "0.1.0", features = ["thread-safe-futures"]  }
 maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
 tile-grid.workspace = true
 clap.workspace = true
+serde_json.workspace = true

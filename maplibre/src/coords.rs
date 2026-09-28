@@ -202,6 +202,11 @@ impl Zoom {
         Zoom(zoom)
     }
 
+    /// Returns the continuous zoom value.
+    pub fn value(self) -> f64 {
+        self.0
+    }
+
     pub fn level(&self) -> f32 {
         self.0 as f32
     }
@@ -645,6 +650,7 @@ impl From<Point3<f64>> for WorldCoords {
 pub struct ViewRegion {
     min_tile: WorldTileCoords,
     max_tile: WorldTileCoords,
+    explicit_tiles: Option<Vec<WorldTileCoords>>,
     /// At which zoom level does this region exist
     zoom_level: ZoomLevel,
     /// Padding around this view region
@@ -669,9 +675,26 @@ impl ViewRegion {
         Self {
             min_tile: min_world_tile,
             max_tile: max_world_tile,
+            explicit_tiles: None,
             zoom_level: z,
             max_n_tiles,
             padding,
+        }
+    }
+
+    /// Creates a region from an explicit projection-aware tile selection.
+    pub fn from_tiles(
+        tiles: Vec<WorldTileCoords>,
+        zoom_level: ZoomLevel,
+        max_n_tiles: usize,
+    ) -> Self {
+        Self {
+            min_tile: WorldTileCoords::default(),
+            max_tile: WorldTileCoords::default(),
+            explicit_tiles: Some(tiles),
+            zoom_level,
+            max_n_tiles,
+            padding: 0,
         }
     }
 
@@ -680,6 +703,9 @@ impl ViewRegion {
     }
 
     pub fn is_in_view(&self, &world_coords: &WorldTileCoords) -> bool {
+        if let Some(tiles) = &self.explicit_tiles {
+            return tiles.contains(&world_coords);
+        }
         world_coords.x <= self.max_tile.x + self.padding
             && world_coords.y <= self.max_tile.y + self.padding
             && world_coords.x >= self.min_tile.x - self.padding
@@ -687,15 +713,18 @@ impl ViewRegion {
             && world_coords.z == self.zoom_level
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
-        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding)
-            .flat_map(move |x| {
-                (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
-                    let tile_coord: WorldTileCoords = (x, y, self.zoom_level).into();
-                    tile_coord
+    pub fn iter(&self) -> Box<dyn Iterator<Item = WorldTileCoords> + '_> {
+        if let Some(tiles) = &self.explicit_tiles {
+            return Box::new(tiles.iter().copied().take(self.max_n_tiles));
+        }
+        Box::new(
+            (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding)
+                .flat_map(move |x| {
+                    (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding)
+                        .map(move |y| (x, y, self.zoom_level).into())
                 })
-            })
-            .take(self.max_n_tiles)
+                .take(self.max_n_tiles),
+        )
     }
 }
 
@@ -823,5 +852,16 @@ mod tests {
         {
             println!("{tile_coords}");
         }
+    }
+
+    #[test]
+    fn explicit_view_region_preserves_projection_selection() {
+        let zoom = ZoomLevel::new(3);
+        let tiles = vec![(3, 3, zoom).into(), (4, 4, zoom).into()];
+        let region = ViewRegion::from_tiles(tiles.clone(), zoom, 32);
+
+        assert_eq!(region.iter().collect::<Vec<_>>(), tiles);
+        assert!(region.is_in_view(&(3, 3, zoom).into()));
+        assert!(!region.is_in_view(&(3, 4, zoom).into()));
     }
 }

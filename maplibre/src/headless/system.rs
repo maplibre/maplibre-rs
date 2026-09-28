@@ -68,7 +68,7 @@ impl System for WriteSurfaceBufferSystem {
                 drop(padded_buffer);
                 buffered_texture.unmap();
 
-                self.frame += 1;
+                self.frame = self.frame.wrapping_add(1);
                 Ok(())
             }
         }

@@ -1,5 +1,11 @@
 #![allow(clippy::identity_op)]
 
+mod background;
+
+pub use background::{
+    AtmosphereLayerMetadata, AtmosphereShader, BackgroundLayerMetadata, BackgroundShader,
+    GlobeBackgroundShader,
+};
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
 
@@ -33,52 +39,81 @@ pub struct TileMaskShader {
 
 impl Shader for TileMaskShader {
     fn describe_vertex(&self) -> VertexState {
+        let metadata = VertexBufferLayout {
+            array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: vec![
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    format: wgpu::VertexFormat::Float32x4,
+                    shader_location: 4,
+                },
+                wgpu::VertexAttribute {
+                    offset: wgpu::VertexFormat::Float32x4.size(),
+                    format: wgpu::VertexFormat::Float32x4,
+                    shader_location: 5,
+                },
+                wgpu::VertexAttribute {
+                    offset: 2 * wgpu::VertexFormat::Float32x4.size(),
+                    format: wgpu::VertexFormat::Float32x4,
+                    shader_location: 6,
+                },
+                wgpu::VertexAttribute {
+                    offset: 3 * wgpu::VertexFormat::Float32x4.size(),
+                    format: wgpu::VertexFormat::Float32x4,
+                    shader_location: 7,
+                },
+                wgpu::VertexAttribute {
+                    offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                    format: wgpu::VertexFormat::Float32,
+                    shader_location: 9,
+                },
+                wgpu::VertexAttribute {
+                    offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                        + 3 * wgpu::VertexFormat::Float32.size(),
+                    format: wgpu::VertexFormat::Float32x4,
+                    shader_location: 2,
+                },
+            ],
+        };
+        let buffers = if self.debug_lines {
+            vec![metadata]
+        } else {
+            vec![
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<
+                        crate::projection::globe::tile_mesh::TileMeshVertex,
+                    >() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Sint16x2,
+                        shader_location: 0,
+                    }],
+                },
+                metadata,
+            ]
+        };
         VertexState {
             source: if self.debug_lines {
-                include_str!("tile_debug.vertex.wgsl")
+                concat!(
+                    include_str!("projection.vertex.wgsl"),
+                    include_str!("tile_debug.vertex.wgsl")
+                )
             } else {
-                include_str!("tile_mask.vertex.wgsl")
+                concat!(
+                    include_str!("projection.vertex.wgsl"),
+                    include_str!("tile_mask.vertex.wgsl")
+                )
             },
             entry_point: "main",
-            buffers: vec![VertexBufferLayout {
-                array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
-                attributes: vec![
-                    // translate
-                    wgpu::VertexAttribute {
-                        offset: 0,
-                        format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 4,
-                    },
-                    wgpu::VertexAttribute {
-                        offset: 1 * wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 5,
-                    },
-                    wgpu::VertexAttribute {
-                        offset: 2 * wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 6,
-                    },
-                    wgpu::VertexAttribute {
-                        offset: 3 * wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 7,
-                    },
-                    // zoom factor
-                    wgpu::VertexAttribute {
-                        offset: 4 * wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32,
-                        shader_location: 9,
-                    },
-                ],
-            }],
+            buffers,
         }
     }
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("basic.fragment.wgsl"),
+            source: include_str!("tile_mask.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
@@ -100,7 +135,10 @@ pub struct FillShader {
 impl Shader for FillShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("fill.vertex.wgsl"),
+            source: concat!(
+                include_str!("projection.vertex.wgsl"),
+                include_str!("fill.vertex.wgsl")
+            ),
             entry_point: "main",
             buffers: vec![
                 // vertex data
@@ -154,6 +192,13 @@ impl Shader for FillShader {
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 9,
                         },
+                        // tile_mercator_coords
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                                + 3 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 2,
+                        },
                     ],
                 },
                 // layer metadata
@@ -166,6 +211,11 @@ impl Shader for FillShader {
                             offset: 0,
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 10,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 2 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: 15,
                         },
                     ],
                 },
@@ -206,7 +256,10 @@ pub struct LineShader {
 impl Shader for LineShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("line.vertex.wgsl"),
+            source: concat!(
+                include_str!("projection.vertex.wgsl"),
+                include_str!("line.vertex.wgsl")
+            ),
             entry_point: "main",
             buffers: vec![
                 // vertex data
@@ -274,6 +327,20 @@ impl Shader for LineShader {
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 12,
                         },
+                        // tile_mercator_coords
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                                + 3 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 2,
+                        },
+                        // clip_antimeridian
+                        wgpu::VertexAttribute {
+                            offset: 5 * wgpu::VertexFormat::Float32x4.size()
+                                + 3 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Uint32,
+                            shader_location: 14,
+                        },
                     ],
                 },
                 // layer metadata
@@ -292,6 +359,11 @@ impl Shader for LineShader {
                             offset: wgpu::VertexFormat::Float32.size(),
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 13,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 2 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: 15,
                         },
                     ],
                 },
@@ -411,6 +483,7 @@ pub struct SDFShaderFeatureMetadata {
 pub struct ShaderLayerMetadata {
     pub z_index: f32,
     pub line_width: f32,
+    pub translate: Vec2f32,
 }
 
 #[repr(C)]
@@ -420,6 +493,8 @@ pub struct ShaderTileMetadata {
     pub zoom_factor: f32,
     pub viewport_width: f32,
     pub viewport_height: f32,
+    pub tile_mercator_coords: Vec4f32,
+    pub clip_antimeridian: u32,
 }
 
 impl ShaderTileMetadata {
@@ -429,6 +504,8 @@ impl ShaderTileMetadata {
             zoom_factor,
             viewport_width: 512.0,
             viewport_height: 512.0,
+            tile_mercator_coords: [0.0, 0.0, 1.0 / 4096.0, 1.0 / 4096.0],
+            clip_antimeridian: 0,
         }
     }
 }
@@ -462,9 +539,24 @@ pub struct RasterShader {
 impl Shader for RasterShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("raster.vertex.wgsl"),
+            source: concat!(
+                include_str!("projection.vertex.wgsl"),
+                include_str!("raster.vertex.wgsl")
+            ),
             entry_point: "main",
             buffers: vec![
+                // subdivided tile mesh
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<
+                        crate::projection::globe::tile_mesh::TileMeshVertex,
+                    >() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Sint16x2,
+                        shader_location: 0,
+                    }],
+                },
                 // tile metadata
                 VertexBufferLayout {
                     array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
@@ -496,6 +588,13 @@ impl Shader for RasterShader {
                             offset: 4 * wgpu::VertexFormat::Float32x4.size(),
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 9,
+                        },
+                        // tile_mercator_coords
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                                + 3 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 2,
                         },
                     ],
                 },
@@ -592,7 +691,10 @@ pub struct SymbolShader {
 impl Shader for SymbolShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("sdf_new.vertex.wgsl"),
+            source: concat!(
+                include_str!("projection.vertex.wgsl"),
+                include_str!("sdf_new.vertex.wgsl")
+            ),
             entry_point: "main",
             buffers: vec![
                 // vertex data
@@ -653,6 +755,13 @@ impl Shader for SymbolShader {
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 9,
                         },
+                        // tile_mercator_coords
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                                + 3 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 3,
+                        },
                     ],
                 },
                 // layer metadata
@@ -675,18 +784,15 @@ impl Shader for SymbolShader {
                     ],
                 },
                 // features
-                //VertexBufferLayout {
-                //    array_stride: std::mem::size_of::<SDFShaderFeatureMetadata>() as u64,
-                //    step_mode: wgpu::VertexStepMode::Vertex,
-                //    attributes: vec![
-                //        // opacity
-                //        wgpu::VertexAttribute {
-                //            offset: 0,
-                //            format: wgpu::VertexFormat::Float32,
-                //            shader_location: 12,
-                //        },
-                //    ],
-                //},
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<SDFShaderFeatureMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 12,
+                    }],
+                },
             ],
         }
     }
@@ -710,54 +816,6 @@ impl Shader for SymbolShader {
                         operation: wgpu::BlendOperation::Add,
                     },
                 }),
-            })],
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, Pod, Zeroable)]
-pub struct BackgroundLayerMetadata {
-    pub color: [f32; 4],
-    pub z_index: f32,
-}
-
-pub struct BackgroundShader {
-    pub format: wgpu::TextureFormat,
-}
-
-impl Shader for BackgroundShader {
-    fn describe_vertex(&self) -> VertexState {
-        VertexState {
-            source: include_str!("background.vertex.wgsl"),
-            entry_point: "main",
-            buffers: vec![VertexBufferLayout {
-                array_stride: std::mem::size_of::<BackgroundLayerMetadata>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
-                attributes: vec![
-                    wgpu::VertexAttribute {
-                        offset: 0,
-                        format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 0,
-                    },
-                    wgpu::VertexAttribute {
-                        offset: 16,
-                        format: wgpu::VertexFormat::Float32,
-                        shader_location: 1,
-                    },
-                ],
-            }],
-        }
-    }
-
-    fn describe_fragment(&self) -> FragmentState {
-        FragmentState {
-            source: include_str!("basic.fragment.wgsl"),
-            entry_point: "main",
-            targets: vec![Some(wgpu::ColorTargetState {
-                format: self.format,
-                blend: None,
-                write_mask: wgpu::ColorWrites::ALL,
             })],
         }
     }

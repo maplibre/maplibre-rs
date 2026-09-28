@@ -27,6 +27,15 @@ pub struct RenderPipelineDescriptor {
 
 impl RenderPipelineDescriptor {
     pub fn initialize(&self, device: &wgpu::Device) -> wgpu::RenderPipeline {
+        self.initialize_with_prefix_layouts(device, &[])
+    }
+
+    /// Creates a pipeline with shared bind-group layouts before descriptor-owned layouts.
+    pub fn initialize_with_prefix_layouts(
+        &self,
+        device: &wgpu::Device,
+        prefix_layouts: &[&wgpu::BindGroupLayout],
+    ) -> wgpu::RenderPipeline {
         let bind_group_layouts = if let Some(layout) = &self.layout {
             layout
                 .iter()
@@ -41,8 +50,14 @@ impl RenderPipelineDescriptor {
             vec![]
         };
 
+        let all_bind_group_layouts = prefix_layouts
+            .iter()
+            .copied()
+            .chain(bind_group_layouts.iter())
+            .collect::<Vec<_>>();
+
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &bind_group_layouts.iter().collect::<Vec<_>>(),
+            bind_group_layouts: &all_bind_group_layouts,
             ..Default::default()
         });
 

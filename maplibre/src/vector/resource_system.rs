@@ -2,7 +2,8 @@
 use crate::{
     context::MapContext,
     render::{
-        eventually::Eventually,
+        eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         resource::{RenderPipeline, TilePipeline},
         shaders,
         shaders::Shader,
@@ -25,11 +26,14 @@ pub fn resource_system(
         ..
     }: &mut MapContext,
 ) -> SystemResult {
-    let Some((buffer_pool, vector_pipeline, line_pipeline)) = world.resources.query_mut::<(
-        &mut Eventually<VectorBufferPool>,
-        &mut Eventually<VectorPipeline>,
-        &mut Eventually<LinePipeline>,
-    )>() else {
+    let Some((buffer_pool, vector_pipeline, line_pipeline, Initialized(projection_resources))) =
+        world.resources.query_mut::<(
+            &mut Eventually<VectorBufferPool>,
+            &mut Eventually<VectorPipeline>,
+            &mut Eventually<LinePipeline>,
+            &mut Eventually<ProjectionGpuResources>,
+        )>()
+    else {
         return Err(SystemError::Dependencies);
     };
 
@@ -54,7 +58,7 @@ pub fn resource_system(
             false,
         )
         .describe_render_pipeline()
-        .initialize(device);
+        .initialize_with_prefix_layouts(device, &[projection_resources.bind_group_layout()]);
 
         VectorPipeline(pipeline)
     });
@@ -78,7 +82,7 @@ pub fn resource_system(
             false,
         )
         .describe_render_pipeline()
-        .initialize(device);
+        .initialize_with_prefix_layouts(device, &[projection_resources.bind_group_layout()]);
 
         LinePipeline(pipeline)
     });

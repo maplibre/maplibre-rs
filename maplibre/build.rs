@@ -57,10 +57,7 @@ fn generate_protobuf() {
         .unwrap()
         .filter_map(|entry| {
             let entry = entry.ok()?;
-            println!(
-                "cargo:rerun-if-changed={}",
-                entry.path().display().to_string()
-            );
+            println!("cargo:rerun-if-changed={}", entry.path().display());
             Some(entry.path())
         })
         .collect::<Vec<_>>();

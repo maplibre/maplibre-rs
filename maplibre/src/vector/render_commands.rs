@@ -3,6 +3,7 @@
 use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
@@ -19,12 +20,17 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<VectorPipeline>>()
+        let Some((Initialized(pipeline), Initialized(projection_resources))) =
+            world.resources.query::<(
+                &Eventually<VectorPipeline>,
+                &Eventually<ProjectionGpuResources>,
+            )>()
         else {
             return RenderCommandResult::Failure;
         };
 
         pass.set_render_pipeline(pipeline);
+        pass.set_bind_group(0, projection_resources.bind_group(), &[]);
         RenderCommandResult::Success
     }
 }
@@ -113,11 +119,17 @@ impl<P: PhaseItem> RenderCommand<P> for SetLineTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<LinePipeline>>() else {
+        let Some((Initialized(pipeline), Initialized(projection_resources))) =
+            world.resources.query::<(
+                &Eventually<LinePipeline>,
+                &Eventually<ProjectionGpuResources>,
+            )>()
+        else {
             return RenderCommandResult::Failure;
         };
 
         pass.set_render_pipeline(pipeline);
+        pass.set_bind_group(0, projection_resources.bind_group(), &[]);
         RenderCommandResult::Success
     }
 }

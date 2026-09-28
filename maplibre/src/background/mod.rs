@@ -25,6 +25,16 @@ impl<E: Environment> Plugin<E> for BackgroundPlugin {
                 crate::background::resource_system::BackgroundRenderPipeline,
             >::Uninitialized,
         );
+        world.resources.insert(
+            crate::render::eventually::Eventually::<
+                crate::background::resource_system::GlobeBackgroundRenderPipeline,
+            >::Uninitialized,
+        );
+        world.resources.insert(
+            crate::render::eventually::Eventually::<
+                crate::background::resource_system::AtmosphereRenderPipeline,
+            >::Uninitialized,
+        );
 
         schedule.add_system_to_stage(
             crate::render::RenderStageLabel::Queue,

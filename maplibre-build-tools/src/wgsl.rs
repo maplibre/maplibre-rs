@@ -1,4 +1,9 @@
-use std::{env, path::Path, process::exit};
+use std::{
+    collections::HashSet,
+    env, io,
+    path::{Path, PathBuf},
+    process::exit,
+};
 
 use naga::{
     front::{wgsl, wgsl::ParseError},
@@ -32,7 +37,7 @@ impl WgslError {
 }
 
 fn validate_wgsl(validator: &mut Validator, path: &Path) -> Result<(), WgslError> {
-    let shader = std::fs::read_to_string(path).map_err(WgslError::from)?;
+    let shader = load_wgsl(path, &mut HashSet::new()).map_err(WgslError::from)?;
     let module = wgsl::parse_str(&shader).map_err(|err| WgslError::from_parse_err(err, &shader))?;
 
     if let Err(err) = validator.validate(&module) {
@@ -40,6 +45,33 @@ fn validate_wgsl(validator: &mut Validator, path: &Path) -> Result<(), WgslError
     } else {
         Ok(())
     }
+}
+
+fn load_wgsl(path: &Path, active: &mut HashSet<PathBuf>) -> io::Result<String> {
+    let path = path.to_path_buf();
+    if !active.insert(path.clone()) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("cyclic WGSL include at {}", path.display()),
+        ));
+    }
+
+    let source = std::fs::read_to_string(&path)?;
+    let mut expanded = String::new();
+    for line in source.lines() {
+        if let Some(relative_path) = line.strip_prefix("// @include ") {
+            let include_path = path
+                .parent()
+                .unwrap_or_else(|| Path::new(""))
+                .join(relative_path.trim());
+            expanded.push_str(&load_wgsl(&include_path, active)?);
+        } else {
+            expanded.push_str(line);
+            expanded.push('\n');
+        }
+    }
+    active.remove(&path);
+    Ok(expanded)
 }
 
 pub fn validate_project_wgsl() {
@@ -62,7 +94,7 @@ pub fn validate_project_wgsl() {
             Ok(entry) => {
                 let path = entry.path();
                 if !path.is_dir() {
-                    println!("cargo:rerun-if-changed={}", path.display().to_string());
+                    println!("cargo:rerun-if-changed={}", path.display());
                     match validate_wgsl(&mut validator, path) {
                         Ok(_) => {}
                         Err(err) => {
@@ -97,3 +129,6 @@ pub fn validate_project_wgsl() {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

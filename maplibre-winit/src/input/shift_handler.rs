@@ -4,7 +4,10 @@ use cgmath::{Vector2, Zero};
 use maplibre::context::MapContext;
 use winit::keyboard::{Key, NamedKey};
 
-use super::UpdateState;
+use super::{
+    projection::{center_pixel, pan_globe_by_pixels},
+    UpdateState,
+};
 
 pub struct ShiftHandler {
     camera_translate: Vector2<f64>,
@@ -14,12 +17,26 @@ pub struct ShiftHandler {
 }
 
 impl UpdateState for ShiftHandler {
-    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, dt: Duration) {
+    fn update_state(
+        &mut self,
+        MapContext {
+            style, view_state, ..
+        }: &mut MapContext,
+        dt: Duration,
+    ) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.camera_translate * dt;
-        view_state.camera_mut().move_relative(delta);
         self.camera_translate -= delta;
+        if delta.is_zero() {
+            return;
+        }
+        // Moving the camera by `delta` shows the ground that was `delta` away, which on the globe
+        // is a drag of the surface by `-delta`.
+        let center = center_pixel(view_state);
+        if !pan_globe_by_pixels(style, view_state, center, -delta) {
+            view_state.camera_mut().move_relative(delta);
+        }
     }
 }
 

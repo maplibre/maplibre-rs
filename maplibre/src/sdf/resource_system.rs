@@ -4,7 +4,8 @@ use wgpu::util::{DeviceExt, TextureDataOrder};
 use crate::{
     context::MapContext,
     render::{
-        eventually::Eventually,
+        eventually::{Eventually, Eventually::Initialized},
+        projection::ProjectionGpuResources,
         resource::{RenderPipeline, TilePipeline},
         shaders,
         shaders::Shader,
@@ -34,11 +35,13 @@ pub fn resource_system(
         symbol_pipeline,
         glyph_texture_sampler,
         glyph_texture_bind_group,
+        Initialized(projection_resources),
     )) = world.resources.query_mut::<(
         &mut Eventually<SymbolBufferPool>,
         &mut Eventually<SymbolPipeline>,
         &mut Eventually<(wgpu::Texture, wgpu::Sampler)>,
         &mut Eventually<GlyphTexture>,
+        &mut Eventually<ProjectionGpuResources>,
     )>()
     else {
         return Err(SystemError::Dependencies);
@@ -65,7 +68,7 @@ pub fn resource_system(
             true,
         )
         .describe_render_pipeline()
-        .initialize(device);
+        .initialize_with_prefix_layouts(device, &[projection_resources.bind_group_layout()]);
 
         let (texture, sampler) = glyph_texture_sampler.initialize(|| {
             let data = include_bytes!("../../../data/0-255.pbf");
@@ -104,7 +107,7 @@ pub fn resource_system(
         });
 
         glyph_texture_bind_group.initialize(|| {
-            GlyphTexture::from_device(device, texture, sampler, &pipeline.get_bind_group_layout(0))
+            GlyphTexture::from_device(device, texture, sampler, &pipeline.get_bind_group_layout(1))
         });
 
         SymbolPipeline(pipeline)

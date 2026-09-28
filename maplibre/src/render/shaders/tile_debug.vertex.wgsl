@@ -1,76 +1,73 @@
+// @include projection.vertex.wgsl
+
 struct VertexOutput {
     @location(0) v_color: vec4<f32>,
+    @location(4) horizon_distance: f32,
     @builtin(position) position: vec4<f32>,
 };
 
 var<private> EXTENT: f32 = 4096.0;
 var<private> DEBUG_COLOR: vec4<f32> = vec4<f32>(1.0, 0.0, 0.0, 1.0);
 
+// Each tile edge is a strip of thin quads so the outline follows the curvature of the globe
+// instead of cutting a chord between the tile corners.
+const SEGMENTS: u32 = 32u;
+const VERTICES_PER_QUAD: u32 = 6u;
+
 @vertex
 fn main(
+    @location(2) tile_mercator_coords: vec4<f32>,
     @location(4) translate1: vec4<f32>,
     @location(5) translate2: vec4<f32>,
     @location(6) translate3: vec4<f32>,
     @location(7) translate4: vec4<f32>,
     @location(9) zoom_factor: f32,
     @builtin(vertex_index) vertex_idx: u32,
-    @builtin(instance_index) instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    let z = 0.0;
+    let width = EXTENT / 256.0 * zoom_factor; // Width is 1/256 of a tile
 
-    let target_width = 1.0;
-    let target_height = 1.0;
+    let edge = vertex_idx / (SEGMENTS * VERTICES_PER_QUAD);
+    let segment = (vertex_idx / VERTICES_PER_QUAD) % SEGMENTS;
+    let corner = vertex_idx % VERTICES_PER_QUAD;
+    let start = f32(segment) / f32(SEGMENTS) * EXTENT;
+    let end = f32(segment + 1u) / f32(SEGMENTS) * EXTENT;
 
-    let WIDTH = EXTENT / 256.0 * zoom_factor; // Width is 1/256 of a tile
+    // Two triangles per quad: (start, 0) (end, 0) (end, width) and (start, 0) (end, width) (start, width).
+    var along = start;
+    var across = 0.0;
+    switch corner {
+        case 1u, 4u: {
+            along = end;
+            across = select(0.0, width, corner == 4u);
+        }
+        case 2u: {
+            along = end;
+            across = width;
+        }
+        case 5u: {
+            across = width;
+        }
+        default: {}
+    }
 
-    var VERTICES: array<vec3<f32>, 24> = array<vec3<f32>, 24>(
-        // Debug lines vertices
-        // left
-        vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(0.0, EXTENT, z),
-        vec3<f32>(WIDTH, EXTENT, z),
+    var position = vec2<f32>(across, along); // left edge
+    switch edge {
+        case 1u: {
+            position = vec2<f32>(EXTENT - across, along); // right edge
+        }
+        case 2u: {
+            position = vec2<f32>(along, across); // top edge
+        }
+        case 3u: {
+            position = vec2<f32>(along, EXTENT - across); // bottom edge
+        }
+        default: {}
+    }
 
-        vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(WIDTH, EXTENT, z),
-        vec3<f32>(WIDTH, 0.0, z),
-
-        // right
-        vec3<f32>(EXTENT - WIDTH, 0.0, z),
-        vec3<f32>(EXTENT - WIDTH, EXTENT, z),
-        vec3<f32>(EXTENT, EXTENT, z),
-
-        vec3<f32>(EXTENT - WIDTH, 0.0, z),
-        vec3<f32>(EXTENT, EXTENT, z),
-        vec3<f32>(EXTENT, 0.0, z),
-
-        // top
-        vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(0.0, WIDTH, z),
-        vec3<f32>(EXTENT, WIDTH, z),
-
-        vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(EXTENT, WIDTH, z),
-        vec3<f32>(EXTENT, 0.0, z),
-
-        // bottom
-        vec3<f32>(0.0, EXTENT - WIDTH, z),
-        vec3<f32>(0.0, EXTENT, z),
-        vec3<f32>(EXTENT, EXTENT, z),
-
-        vec3<f32>(0.0, EXTENT - WIDTH, z),
-        vec3<f32>(EXTENT, EXTENT, z),
-        vec3<f32>(EXTENT, EXTENT - WIDTH, z)
+    let projected = project_tile_position(
+        vec3<f32>(position, 0.0),
+        mat4x4<f32>(translate1, translate2, translate3, translate4),
+        tile_mercator_coords,
     );
-
-    let vertex = VERTICES[vertex_idx];
-
-    let scaling: mat3x3<f32> = mat3x3<f32>(
-            vec3<f32>(target_width,   0.0,            0.0),
-            vec3<f32>(0.0,            target_height,  0.0),
-            vec3<f32>(0.0,            0.0,            1.0)
-    );
-
-    var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * vertex), 1.0);
-    final_position.z = 10.0;
-    return VertexOutput(DEBUG_COLOR, final_position);
+    return VertexOutput(DEBUG_COLOR, projected.horizon_distance, projected.clip_position);
 }

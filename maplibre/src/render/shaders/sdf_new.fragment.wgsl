@@ -1,6 +1,7 @@
 struct VertexOutput {
     @location(1) v_data0: vec2<f32>,
     @location(2) v_data1: vec3<f32>,
+    @location(4) horizon_distance: f32,
     @builtin(position) position: vec4<f32>,
 };
 
@@ -9,15 +10,18 @@ struct Output {
     @location(0) out_color: vec4<f32>,
 };
 
-@group(0) @binding(0)
+@group(1) @binding(0)
 var t_glyphs: texture_2d<f32>;
-@group(0) @binding(1)
+@group(1) @binding(1)
 var s_glyphs: sampler;
 
 // Note: Ensure uniform control flow!
 // https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Non-uniform_flow_control
 @fragment
 fn main(in: VertexOutput) -> Output {
+    if in.horizon_distance < 0.0 {
+        discard;
+    }
 let SDF_PX:f32 =  8.0;
 
     let   fill_color: vec4<f32> = vec4<f32>(0.2, 0.2, 0.2, 1.0);  // highp
@@ -98,5 +102,4 @@ let tex: vec2<f32> = in.v_data0.xy;
         return Output(vec4(color_rgb, color.a * alpha * 1.0));
        //   return Output(vec4(vec3<f32>(1.0, 0.0, 0.0), 1.0)); // debug bounding box, alpha 0.2 to see collisions
 */
-
 
